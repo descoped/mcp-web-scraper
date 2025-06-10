@@ -499,6 +499,82 @@ export const BrowserCloseArgsSchema = z.object({
 
 export type BrowserCloseArgs = z.infer<typeof BrowserCloseArgsSchema>;
 
+// === MEDIUM PRIORITY ADVANCED BROWSER TOOLS ===
+
+// Browser PDF save arguments
+export const BrowserPdfSaveArgsSchema = z.object({
+    sessionId: z.string(),
+    path: z.string().optional(),
+    format: z.enum(['A4', 'A3', 'A2', 'A1', 'A0', 'Letter', 'Legal', 'Tabloid', 'Ledger']).default('A4'),
+    width: z.string().optional(),
+    height: z.string().optional(),
+    scale: z.number().min(0.1).max(2).default(1),
+    displayHeaderFooter: z.boolean().default(false),
+    headerTemplate: z.string().optional(),
+    footerTemplate: z.string().optional(),
+    printBackground: z.boolean().default(false),
+    landscape: z.boolean().default(false),
+    pageRanges: z.string().optional(),
+    preferCSSPageSize: z.boolean().default(false),
+    margin: z.object({
+        top: z.string().optional(),
+        right: z.string().optional(),
+        bottom: z.string().optional(),
+        left: z.string().optional(),
+    }).optional(),
+});
+
+export type BrowserPdfSaveArgs = z.infer<typeof BrowserPdfSaveArgsSchema>;
+
+// Browser console messages arguments
+export const BrowserConsoleMessagesArgsSchema = z.object({
+    sessionId: z.string(),
+    action: z.enum(['start', 'stop', 'get', 'clear']),
+    level: z.enum(['log', 'info', 'warn', 'error', 'debug', 'trace']).optional(),
+    limit: z.number().min(1).max(1000).default(100),
+});
+
+export type BrowserConsoleMessagesArgs = z.infer<typeof BrowserConsoleMessagesArgsSchema>;
+
+// Browser resize arguments
+export const BrowserResizeArgsSchema = z.object({
+    sessionId: z.string(),
+    width: z.number().min(100).max(4000),
+    height: z.number().min(100).max(4000),
+    deviceScaleFactor: z.number().min(0.1).max(5).default(1),
+});
+
+export type BrowserResizeArgs = z.infer<typeof BrowserResizeArgsSchema>;
+
+// Browser snapshot arguments
+export const BrowserSnapshotArgsSchema = z.object({
+    sessionId: z.string(),
+    interestingOnly: z.boolean().default(true),
+    root: z.string().optional(),
+});
+
+export type BrowserSnapshotArgs = z.infer<typeof BrowserSnapshotArgsSchema>;
+
+// Browser install arguments
+export const BrowserInstallArgsSchema = z.object({
+    browser: z.enum(['chromium', 'firefox', 'webkit', 'chrome', 'msedge']),
+    version: z.string().optional(),
+    force: z.boolean().default(false),
+});
+
+export type BrowserInstallArgs = z.infer<typeof BrowserInstallArgsSchema>;
+
+// Browser generate playwright test arguments
+export const BrowserGenerateTestArgsSchema = z.object({
+    sessionId: z.string(),
+    outputPath: z.string(),
+    testName: z.string(),
+    includeAssertions: z.boolean().default(true),
+    language: z.enum(['javascript', 'typescript', 'python', 'java', 'csharp']).default('typescript'),
+});
+
+export type BrowserGenerateTestArgs = z.infer<typeof BrowserGenerateTestArgsSchema>;
+
 // Export progress-related types
 export * from './progress.js';
 

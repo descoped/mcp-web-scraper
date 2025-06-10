@@ -54,6 +54,14 @@ import {BrowserHandleDialogTool} from './tools/browserHandleDialogTool.js';
 import {BrowserFileUploadTool} from './tools/browserFileUploadTool.js';
 import {BrowserCloseTool} from './tools/browserCloseTool.js';
 
+// Import medium priority tools
+import {BrowserPdfSaveTool} from './tools/browserPdfSaveTool.js';
+import {BrowserConsoleMessagesTool} from './tools/browserConsoleMessagesTool.js';
+import {BrowserResizeTool} from './tools/browserResizeTool.js';
+import {BrowserSnapshotTool} from './tools/browserSnapshotTool.js';
+import {BrowserInstallTool} from './tools/browserInstallTool.js';
+import {BrowserGenerateTestTool} from './tools/browserGenerateTestTool.js';
+
 import type {
   IBrowserPool,
   IConnectionManager,
@@ -235,6 +243,14 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
     this.toolRegistry.registerTool(new BrowserHandleDialogTool());
     this.toolRegistry.registerTool(new BrowserFileUploadTool());
     this.toolRegistry.registerTool(new BrowserCloseTool());
+
+    // Register medium priority tools
+    this.toolRegistry.registerTool(new BrowserPdfSaveTool());
+    this.toolRegistry.registerTool(new BrowserConsoleMessagesTool());
+    this.toolRegistry.registerTool(new BrowserResizeTool());
+    this.toolRegistry.registerTool(new BrowserSnapshotTool());
+    this.toolRegistry.registerTool(new BrowserInstallTool());
+    this.toolRegistry.registerTool(new BrowserGenerateTestTool());
     
     console.log(`Registered ${this.toolRegistry.getAllTools().length} tools`);
   }
