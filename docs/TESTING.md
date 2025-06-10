@@ -1,6 +1,6 @@
 # Cookie Consent Testing Framework
 
-This directory contains comprehensive testing scripts for validating cookie consent dialog handling across international news sites using the MCP Playwright server.
+This directory contains comprehensive testing scripts for validating cookie consent dialog handling across international news sites using the MCP Web Scraper.
 
 ## Scripts Overview
 
@@ -51,7 +51,7 @@ US news sites including CNN, Fox News, NYT, Washington Post, regional papers, an
 
 ## Prerequisites
 
-1. **MCP Playwright Server Running**:
+1. **MCP Web Scraper Running**:
    ```bash
    docker compose up -d mcp-web-scraper
    ```

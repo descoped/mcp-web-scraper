@@ -1,10 +1,10 @@
-# CLAUDE.md - MCP Playwright Server
+# CLAUDE.md - MCP Web Scraper
 
-This file provides comprehensive guidance to Claude Code when working with the **MCP Playwright Server** - a production-ready Model Context Protocol (MCP) compliant web scraping service with advanced cookie consent handling.
+This file provides comprehensive guidance to Claude Code when working with the **MCP Web Scraper** - a production-ready Model Context Protocol (MCP) compliant web scraping service with advanced cookie consent handling.
 
 ## Project Overview
 
-The **MCP Playwright Server** is a TypeScript-based MCP server that provides intelligent web scraping capabilities with sophisticated cookie consent handling, real-time progress tracking, content streaming, and comprehensive monitoring.
+The **MCP Web Scraper** is a TypeScript-based MCP server that provides intelligent web scraping capabilities with sophisticated cookie consent handling, real-time progress tracking, content streaming, and comprehensive monitoring.
 
 ### 🎯 **Core Value Proposition**
 - **30+ Language Cookie Consent**: Intelligent detection and handling across European languages
@@ -15,7 +15,7 @@ The **MCP Playwright Server** is a TypeScript-based MCP server that provides int
 
 ### 🏗 **Architecture Overview**
 ```
-MCP Playwright Server (TypeScript/Node.js 18)
+MCP Web Scraper (TypeScript/Node.js 18)
 ├── Core Architecture
 │   ├── Server (PlaywrightMCPServer) - Main MCP server implementation
 │   ├── Browser Pool - Managed Playwright browser instances (max 5)
@@ -860,6 +860,32 @@ healthcheck:
 
 ---
 
+## Documentation Organization
+
+The project documentation is organized for clarity and maintainability:
+
+### **Root Level**
+- `README.md` - Main project documentation and quick start guide
+- `CLAUDE.md` - This comprehensive technical guide for Claude Code
+
+### **docs/** - User Documentation
+- `docs/MCP_CLIENT_CONFIGURATION.md` - Complete MCP client setup guide
+- `docs/TESTING.md` - Cookie consent testing framework
+- `docs/DEPLOYMENT_PATTERNS.md` - Production deployment guides  
+- `docs/VERSION_HISTORY.md` - Release notes and changelog
+
+### **docs/dev/** - Development Documentation
+- `docs/dev/MCP_FEATURE_ANALYSIS.md` - Feature comparison analysis
+- `docs/dev/NAVIGATION_IMPLEMENTATION_PLAN.md` - Navigation capabilities roadmap
+- `docs/dev/MIGRATION_HISTORY.md` - Historical context and legacy information
+- `docs/dev/PROMPT_INSTRUCTION_DEVELOPMENT.md` - Development guidance for future work
+
+When referencing documentation files, use the correct paths:
+- User docs: `docs/FILENAME.md`
+- Development docs: `docs/dev/FILENAME.md`
+
+---
+
 ## Important Implementation Notes
 
 ### **Cookie Consent Patterns - NEVER MODIFY**
@@ -889,4 +915,4 @@ The cookie consent patterns in `consentHandler.ts` represent **months of testing
 - **Resource Limits**: Browser pool and memory constraints
 - **No Credential Logging**: Sensitive data protection
 
-This MCP Playwright Server represents a **production-ready**, **feature-complete** web scraping solution with **industry-leading cookie consent handling** and **comprehensive real-time capabilities**.
+This MCP Web Scraper represents a **production-ready**, **feature-complete** web scraping solution with **industry-leading cookie consent handling** and **comprehensive real-time capabilities**.

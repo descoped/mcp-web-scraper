@@ -185,6 +185,25 @@ curl -X POST http://localhost:3001/mcp-request \
 
 ## ⚙️ Configuration
 
+### Claude Desktop Setup
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "mcp-web-scraper": {
+      "command": "node",
+      "args": ["/path/to/mcp-web-scraper/dist/server.js"],
+      "env": {
+        "BROWSER_POOL_SIZE": "3",
+        "DEBUG_LOGGING": "true"
+      }
+    }
+  }
+}
+```
+
 ### Environment Variables
 
 ```bash
@@ -226,7 +245,27 @@ services:
 
 ## 🧪 Testing & Validation
 
-### Quick Validation
+### Test Server Locally
+```bash
+# 1. Build and start server
+npm run build
+npm start
+
+# 2. Test health endpoint
+curl http://localhost:3001/health
+
+# 3. Test MCP protocol
+curl -X POST http://localhost:3001/mcp-request \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+### Test with Claude Desktop
+1. **Configure** Claude Desktop with the JSON above
+2. **Restart** Claude Desktop completely
+3. **Test** in conversation: "Can you test cookie consent on https://www.bbc.com?"
+
+### Cookie Consent Validation
 ```bash
 # Test cookie consent on 6 representative sites
 ./test_cookie_consent.sh QUICK
@@ -245,10 +284,11 @@ services:
 
 ## 📚 Documentation
 
+- **[MCP_CLIENT_CONFIGURATION.md](docs/MCP_CLIENT_CONFIGURATION.md)**: Complete MCP client setup guide
 - **[CLAUDE.md](CLAUDE.md)**: Comprehensive technical documentation
-- **[TESTING.md](TESTING.md)**: Cookie consent testing framework
-- **[DEPLOYMENT_PATTERNS.md](DEPLOYMENT_PATTERNS.md)**: Production deployment guides
-- **[VERSION_HISTORY.md](VERSION_HISTORY.md)**: Release notes and changelog
+- **[TESTING.md](docs/TESTING.md)**: Cookie consent testing framework
+- **[DEPLOYMENT_PATTERNS.md](docs/DEPLOYMENT_PATTERNS.md)**: Production deployment guides
+- **[VERSION_HISTORY.md](docs/VERSION_HISTORY.md)**: Release notes and changelog
 
 ## 🔧 Architecture
 
