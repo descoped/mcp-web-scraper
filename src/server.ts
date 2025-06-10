@@ -37,11 +37,22 @@ import {ConsentTool} from './tools/consentTool.js';
 // import { GetPageStateTool } from './tools/getPageStateTool.js';
 // import { LoginFlowTool } from './tools/loginFlowTool.js';
 // import { ScrapeWithSessionTool } from './tools/scrapeWithSessionTool.js';
-// Import critical missing tools
+// Import hybrid automation tools
 import {ManageTabsTool} from './tools/manageTabsTool.js';
 import {MonitorNetworkTool} from './tools/monitorNetworkTool.js';
 import {DragDropTool} from './tools/dragDropTool.js';
 import {NavigateHistoryTool} from './tools/navigateHistoryTool.js';
+
+// Import high priority core browser interaction tools
+import {BrowserNavigateTool} from './tools/browserNavigateTool.js';
+import {BrowserClickTool} from './tools/browserClickTool.js';
+import {BrowserTypeTool} from './tools/browserTypeTool.js';
+import {BrowserHoverTool} from './tools/browserHoverTool.js';
+import {BrowserSelectOptionTool} from './tools/browserSelectOptionTool.js';
+import {BrowserPressKeyTool} from './tools/browserPressKeyTool.js';
+import {BrowserHandleDialogTool} from './tools/browserHandleDialogTool.js';
+import {BrowserFileUploadTool} from './tools/browserFileUploadTool.js';
+import {BrowserCloseTool} from './tools/browserCloseTool.js';
 
 import type {
   IBrowserPool,
@@ -208,11 +219,22 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
     // this.toolRegistry.registerTool(new LoginFlowTool());
     // this.toolRegistry.registerTool(new ScrapeWithSessionTool());
 
-    // Register critical missing tools for hybrid functionality
+    // Register hybrid automation tools
     this.toolRegistry.registerTool(new ManageTabsTool());
     this.toolRegistry.registerTool(new MonitorNetworkTool());
     this.toolRegistry.registerTool(new DragDropTool());
     this.toolRegistry.registerTool(new NavigateHistoryTool());
+
+    // Register high priority core browser interaction tools
+    this.toolRegistry.registerTool(new BrowserNavigateTool());
+    this.toolRegistry.registerTool(new BrowserClickTool());
+    this.toolRegistry.registerTool(new BrowserTypeTool());
+    this.toolRegistry.registerTool(new BrowserHoverTool());
+    this.toolRegistry.registerTool(new BrowserSelectOptionTool());
+    this.toolRegistry.registerTool(new BrowserPressKeyTool());
+    this.toolRegistry.registerTool(new BrowserHandleDialogTool());
+    this.toolRegistry.registerTool(new BrowserFileUploadTool());
+    this.toolRegistry.registerTool(new BrowserCloseTool());
     
     console.log(`Registered ${this.toolRegistry.getAllTools().length} tools`);
   }

@@ -392,6 +392,113 @@ export const HistoryNavigateArgsSchema = z.object({
 
 export type HistoryNavigateArgs = z.infer<typeof HistoryNavigateArgsSchema>;
 
+// === HIGH PRIORITY CORE BROWSER INTERACTION TOOLS ===
+
+// Browser navigate arguments
+export const BrowserNavigateArgsSchema = z.object({
+    sessionId: z.string(),
+    url: z.string().url(),
+    waitUntil: z.enum(['load', 'domcontentloaded', 'networkidle']).default('domcontentloaded'),
+    timeout: z.number().optional(),
+});
+
+export type BrowserNavigateArgs = z.infer<typeof BrowserNavigateArgsSchema>;
+
+// Browser click arguments
+export const BrowserClickArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    button: z.enum(['left', 'right', 'middle']).default('left'),
+    clickCount: z.number().min(1).max(3).default(1),
+    modifiers: z.array(z.enum(['Alt', 'Control', 'Meta', 'Shift'])).default([]),
+    position: z.object({
+        x: z.number(),
+        y: z.number(),
+    }).optional(),
+    force: z.boolean().default(false),
+    timeout: z.number().optional(),
+});
+
+export type BrowserClickArgs = z.infer<typeof BrowserClickArgsSchema>;
+
+// Browser type arguments
+export const BrowserTypeArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    text: z.string(),
+    delay: z.number().min(0).default(0),
+    clear: z.boolean().default(false),
+    timeout: z.number().optional(),
+});
+
+export type BrowserTypeArgs = z.infer<typeof BrowserTypeArgsSchema>;
+
+// Browser hover arguments
+export const BrowserHoverArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    position: z.object({
+        x: z.number(),
+        y: z.number(),
+    }).optional(),
+    force: z.boolean().default(false),
+    timeout: z.number().optional(),
+});
+
+export type BrowserHoverArgs = z.infer<typeof BrowserHoverArgsSchema>;
+
+// Browser select option arguments
+export const BrowserSelectOptionArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    values: z.array(z.string()).optional(),
+    labels: z.array(z.string()).optional(),
+    indices: z.array(z.number()).optional(),
+    timeout: z.number().optional(),
+});
+
+export type BrowserSelectOptionArgs = z.infer<typeof BrowserSelectOptionArgsSchema>;
+
+// Browser press key arguments
+export const BrowserPressKeyArgsSchema = z.object({
+    sessionId: z.string(),
+    key: z.string(),
+    selector: z.string().optional(),
+    modifiers: z.array(z.enum(['Alt', 'Control', 'Meta', 'Shift'])).default([]),
+    delay: z.number().min(0).default(0),
+    timeout: z.number().optional(),
+});
+
+export type BrowserPressKeyArgs = z.infer<typeof BrowserPressKeyArgsSchema>;
+
+// Browser handle dialog arguments
+export const BrowserHandleDialogArgsSchema = z.object({
+    sessionId: z.string(),
+    action: z.enum(['accept', 'dismiss', 'message']),
+    promptText: z.string().optional(),
+    timeout: z.number().optional(),
+});
+
+export type BrowserHandleDialogArgs = z.infer<typeof BrowserHandleDialogArgsSchema>;
+
+// Browser file upload arguments
+export const BrowserFileUploadArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    files: z.array(z.string()),
+    timeout: z.number().optional(),
+});
+
+export type BrowserFileUploadArgs = z.infer<typeof BrowserFileUploadArgsSchema>;
+
+// Browser close arguments
+export const BrowserCloseArgsSchema = z.object({
+    sessionId: z.string(),
+    runBeforeUnload: z.boolean().default(false),
+});
+
+export type BrowserCloseArgs = z.infer<typeof BrowserCloseArgsSchema>;
+
 // Export progress-related types
 export * from './progress.js';
 
