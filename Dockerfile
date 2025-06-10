@@ -4,9 +4,14 @@
 # Base stage with Playwright and Node.js
 FROM mcr.microsoft.com/playwright:v1.52.0-jammy AS app-base
 
-# Install Node.js and npm
+# Install Node.js, npm, and essential tools using meta-packages
 RUN apt-get update && apt-get install -y \
+    build-essential \
     curl \
+    ca-certificates \
+    git \
+    vim \
+    net-tools \
     && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*

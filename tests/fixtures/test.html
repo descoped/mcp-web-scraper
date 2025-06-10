@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Article - MCP Web Scraper Testing</title>
+</head>
+<body>
+<header>
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <article>
+        <h1 id="article-title">Test Article Title for Automated Testing</h1>
+
+        <div class="article-meta">
+            <span class="author">By Test Author</span>
+            <time datetime="2025-06-10">June 10, 2025</time>
+        </div>
+
+        <div class="article-summary">
+            <p>This is a test article summary used for automated testing of the MCP Web Scraper.</p>
+        </div>
+
+        <div class="article-content">
+            <p>This is the main content of the test article. It contains multiple paragraphs to test content extraction
+                capabilities.</p>
+
+            <p>The second paragraph includes some <strong>bold text</strong> and <em>italic text</em> to test HTML
+                parsing.</p>
+
+            <p>The third paragraph contains a <a href="https://example.com">test link</a> to verify link handling.</p>
+
+            <blockquote>
+                This is a test blockquote to verify quote extraction.
+            </blockquote>
+
+            <ul>
+                <li>Test list item 1</li>
+                <li>Test list item 2</li>
+                <li>Test list item 3</li>
+            </ul>
+        </div>
+    </article>
+
+    <!-- Test form elements -->
+    <form id="test-form">
+        <label for="test-input">Test Input:</label>
+        <input type="text" id="test-input" name="testInput" placeholder="Enter test text">
+
+        <label for="test-select">Test Select:</label>
+        <select id="test-select" name="testSelect">
+            <option value="option1">Option 1</option>
+            <option value="option2">Option 2</option>
+            <option value="option3">Option 3</option>
+        </select>
+
+        <button type="submit" id="test-button">Test Button</button>
+    </form>
+
+    <!-- Test cookie consent dialog (for testing) -->
+    <div id="cookie-consent-dialog"
+         style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #f0f0f0; padding: 20px; border-top: 1px solid #ccc;">
+        <p>This website uses cookies to improve your experience.</p>
+        <button id="accept-all-cookies" data-consent="accept">Accept All Cookies</button>
+        <button id="reject-cookies" data-consent="reject">Reject Cookies</button>
+        <button id="customize-cookies" data-consent="customize">Customize Settings</button>
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2025 MCP Web Scraper Test Page</p>
+</footer>
+
+<script>
+    // Simple script to show cookie dialog after page load
+    window.addEventListener('load', function () {
+        setTimeout(function () {
+            document.getElementById('cookie-consent-dialog').style.display = 'block';
+        }, 1000);
+    });
+
+    // Handle cookie consent clicks
+    document.getElementById('accept-all-cookies').addEventListener('click', function () {
+        document.getElementById('cookie-consent-dialog').style.display = 'none';
+        console.log('Cookies accepted');
+    });
+
+    document.getElementById('reject-cookies').addEventListener('click', function () {
+        document.getElementById('cookie-consent-dialog').style.display = 'none';
+        console.log('Cookies rejected');
+    });
+</script>
+</body>
+</html>

@@ -3,20 +3,15 @@
  * Maintains PNG compatibility for existing test infrastructure
  */
 
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import type { Browser, BrowserContext, Page } from 'playwright';
-import { BaseTool } from '../core/toolRegistry.js';
-import { ConsentHandler } from '../core/consentHandler.js';
-import type { 
-  ToolResult, 
-  ToolContext, 
-  ScreenshotArgs, 
-  ScreenshotResult 
-} from '../types/index.js';
-import { 
-  ScreenshotArgsSchema, 
-  ScreenshotResultSchema,
-  DEFAULT_BROWSER_CONTEXT as DefaultContext 
+import {zodToJsonSchema} from 'zod-to-json-schema';
+import type {Browser, BrowserContext, Page} from 'playwright';
+import {BaseTool} from '../core/toolRegistry.js';
+import {ConsentHandler} from '../core/consentHandler.js';
+import type {ScreenshotArgs, ScreenshotResult, ToolContext, ToolResult} from '../types/index.js';
+import {
+  DEFAULT_BROWSER_CONTEXT as DefaultContext,
+  ScreenshotArgsSchema,
+  ScreenshotResultSchema
 } from '../types/index.js';
 
 export class ScreenshotTool extends BaseTool {
@@ -69,7 +64,7 @@ export class ScreenshotTool extends BaseTool {
         type: 'png'  // Maintain PNG format for compatibility
       });
 
-      // Create result object
+      // Create result object with metadata
       const result: ScreenshotResult = {
         success: true,
         url: validatedArgs.url,
@@ -81,7 +76,20 @@ export class ScreenshotTool extends BaseTool {
       // Validate result structure
       const validatedResult = ScreenshotResultSchema.parse(result);
 
-      return this.createResult(validatedResult);
+      // Return MCP-compliant content with both metadata and image data
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(validatedResult, null, 2)
+          },
+          {
+            type: 'image',
+            data: screenshot.toString('base64'),
+            mimeType: 'image/png'
+          }
+        ]
+      };
 
     } catch (error) {
       console.error('Screenshot capture failed:', error);
@@ -95,7 +103,14 @@ export class ScreenshotTool extends BaseTool {
         timestamp: new Date().toISOString()
       };
 
-      return this.createResult(errorResult);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(errorResult, null, 2)
+          }
+        ]
+      };
     } finally {
       // Cleanup resources in proper order
       if (page) {

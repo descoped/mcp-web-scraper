@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$SCRIPT_DIR"  # Script is in project root
 RESULTS_DIR="${PROJECT_ROOT}/output/scraping/result"
 SCREENSHOT_DIR="${PROJECT_ROOT}/output/scraping/screenshot"
 MCP_ENDPOINT="http://localhost:3001"
@@ -160,16 +160,36 @@ test_cookie_consent() {
     local end_time=$(date +%s.%N)
     local duration=$(echo "$end_time - $start_time" | bc 2>/dev/null || echo "0")
     
-    # Also get screenshot
+    # Also get screenshot using MCP tool
     local screenshot_response
-    screenshot_response=$(curl -s -w "%{http_code}" \
-                              --max-time "$TIMEOUT" \
-                              "$MCP_ENDPOINT/view-screenshot?url=$test_url&fullPage=false" \
-                              -o "$screenshot_file" 2>/dev/null || echo "000")
+    screenshot_response=$(curl -s --max-time "$TIMEOUT" \
+                              -H "Content-Type: application/json" \
+                              -d '{
+                                  "jsonrpc": "2.0",
+                                  "id": 1,
+                                  "method": "tools/call",
+                                  "params": {
+                                      "name": "get_page_screenshot",
+                                      "arguments": {
+                                          "url": "'$test_url'",
+                                          "fullPage": false
+                                      }
+                                  }
+                              }' \
+                              "$MCP_ENDPOINT/mcp-request" 2>/dev/null || echo '{"error": "screenshot_failed"}')
     
-    # Check screenshot success
-    if [[ "$screenshot_response" != "200" ]]; then
-        rm -f "$screenshot_file"
+    # Extract and save screenshot if successful
+    local screenshot_success="false"
+    # Check if we have image data in content[1] (screenshot tool returns [metadata, image])
+    if echo "$screenshot_response" | jq -e '.result.content[1].data' > /dev/null 2>&1; then
+        echo "$screenshot_response" | jq -r '.result.content[1].data' | base64 -d > "$screenshot_file" 2>/dev/null
+        if [[ -f "$screenshot_file" && -s "$screenshot_file" ]]; then
+            screenshot_success="true"
+        else
+            rm -f "$screenshot_file"
+            screenshot_file=""
+        fi
+    else
         screenshot_file=""
     fi
     
@@ -423,10 +443,10 @@ generate_reports() {
     log "INFO" "Total Duration: ${total_duration}s"
     echo
     log "INFO" "Reports generated:"
-    log "INFO" "  - Summary: $SUMMARY_REPORT"
-    log "INFO" "  - CSV: $CSV_REPORT" 
-    log "INFO" "  - Main Log: $MAIN_LOG"
-    log "INFO" "  - Screenshots: $SCREENSHOT_DIR"
+    log "INFO" "  - Summary: output/scraping/result/summary_${TIMESTAMP}.json"
+    log "INFO" "  - CSV: output/scraping/result/results_${TIMESTAMP}.csv" 
+    log "INFO" "  - Main Log: output/scraping/result/test_run_${TIMESTAMP}.log"
+    log "INFO" "  - Screenshots: output/scraping/screenshot"
 }
 
 show_help() {
@@ -460,11 +480,11 @@ EXAMPLES:
     $0 --timeout 60 --jobs 10 ALL   # Test all with custom timeout and job count
 
 OUTPUT:
-    Results are saved to: $RESULTS_DIR/
-    - logs/test_run_TIMESTAMP.log           # Detailed execution log
-    - reports/summary_TIMESTAMP.json        # JSON summary report
-    - reports/results_TIMESTAMP.csv         # CSV results for analysis
-    - screenshots/SITE_TYPE_TIMESTAMP.png   # Screenshots for verification
+    Results are saved to: output/scraping/result/
+    - test_run_TIMESTAMP.log                # Detailed execution log
+    - summary_TIMESTAMP.json                # JSON summary report
+    - results_TIMESTAMP.csv                 # CSV results for analysis
+    - Screenshots in: output/scraping/screenshot/
 
 EOF
 }
@@ -529,7 +549,7 @@ main() {
     
     log "INFO" "Starting Cookie Consent Testing Suite"
     log "INFO" "Timestamp: $(date -Iseconds)"
-    log "INFO" "Results directory: $RESULTS_DIR"
+    log "INFO" "Results directory: output/scraping/result"
     log "INFO" "Mobile testing: $MOBILE_TEST"
     log "INFO" "Verbose logging: $VERBOSE"
     

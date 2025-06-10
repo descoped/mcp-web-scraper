@@ -130,10 +130,17 @@ export interface ITool {
  * Tool result schema
  */
 export const ToolResultSchema = z.object({
-  content: z.array(z.object({
-    type: z.literal('text'),
-    text: z.string(),
-  })),
+    content: z.array(z.union([
+        z.object({
+            type: z.literal('text'),
+            text: z.string(),
+        }),
+        z.object({
+            type: z.literal('image'),
+            data: z.string(), // base64 encoded
+            mimeType: z.string(),
+        })
+    ])),
   isError: z.boolean().optional(),
 });
 
