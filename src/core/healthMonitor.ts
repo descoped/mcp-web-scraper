@@ -5,15 +5,10 @@
  * including browser pool, connections, tools, and streaming operations.
  */
 
-import { 
-  HealthStatus, 
-  IHealthMonitor,
-  MonitoringConfig,
-  IMetricsCollector
-} from '../types/monitoring.js';
-import { MetricNames } from './metricsCollector.js';
-import type { IBrowserPool, IConnectionManager, IToolRegistry } from '../types/index.js';
-import type { StreamingManager } from './streamingManager.js';
+import {HealthStatus, IHealthMonitor, IMetricsCollector, MonitoringConfig} from '../types/monitoring.js';
+import {MetricNames} from './metricsCollector.js';
+import type {IBrowserPool, IConnectionManager, IToolRegistry} from '../types/index.js';
+import type {StreamingManager} from './streamingManager.js';
 
 /**
  * Health monitor implementation
@@ -132,12 +127,15 @@ export class HealthMonitor implements IHealthMonitor {
       let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
       
       // Check for degraded conditions
-      if (poolStats.queuedRequests > 5 || poolStats.availableBrowsers === 0) {
+      // Note: availableBrowsers === 0 is healthy with lazy initialization
+      if (poolStats.queuedRequests > 5) {
         status = 'degraded';
       }
       
       // Check for unhealthy conditions
-      if (poolStats.queuedRequests > 20 || poolStats.activeBrowsers === 0) {
+      // Only unhealthy if there are queued requests but no way to serve them
+      if (poolStats.queuedRequests > 20 ||
+          (poolStats.queuedRequests > 0 && poolStats.activeBrowsers === 0 && poolStats.availableBrowsers === 0)) {
         status = 'unhealthy';
       }
 
