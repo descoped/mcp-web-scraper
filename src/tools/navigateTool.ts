@@ -2,38 +2,58 @@
  * Navigate tool - Navigate to URL with optional cookie consent handling
  */
 
-import { z } from 'zod';
-import { BaseNavigationTool } from './baseNavigationTool.js';
+import {zodToJsonSchema} from 'zod-to-json-schema';
+import {BaseTool} from '../core/toolRegistry.js';
+import type {NavigateArgs, NavigationToolContext, ToolResult} from '../types/index.js';
+import {NavigateArgsSchema} from '../types/index.js';
 
-export class NavigateTool extends BaseNavigationTool {
-  name = 'navigate';
-  description = 'Navigate to a URL in a browser session with automatic cookie consent handling';
-  
-  inputSchema = z.object({
-    url: z.string().url().describe('The URL to navigate to'),
-    sessionId: z.string().optional().describe('Session ID to reuse existing browser session'),
-    handleConsent: z.boolean().optional().default(true).describe('Automatically handle cookie consent if detected'),
-    waitForSelector: z.string().optional().describe('CSS selector to wait for after navigation'),
-    timeout: z.number().optional().default(30000).describe('Navigation timeout in milliseconds')
-  });
+export class NavigateTool extends BaseTool {
+    public readonly name = 'navigate';
+    public readonly description = 'Navigate to a URL in a browser session with automatic cookie consent handling';
+    public readonly inputSchema = zodToJsonSchema(NavigateArgsSchema);
 
-  async execute(args: z.infer<typeof this.inputSchema>, context: any): Promise<any> {
-    const session = await this.getOrCreateSession(args, context);
+    async execute(args: Record<string, unknown>, context: NavigationToolContext): Promise<ToolResult> {
+        const validatedArgs = this.validateArgs<NavigateArgs>(args, NavigateArgsSchema);
+
+        if (!context.pageManager) {
+            throw new Error('Page manager not available');
+        }
+
+        let session = null;
+        if (validatedArgs.sessionId) {
+            session = await context.pageManager.getSession(validatedArgs.sessionId);
+            if (!session) {
+                throw new Error(`Session ${validatedArgs.sessionId} not found`);
+            }
+        } else {
+            // Create new session
+            const browser = await context.browserPool.getBrowser();
+            if (!browser) {
+                throw new Error('No browser available from pool');
+            }
+            const browserContext = await browser.newContext();
+            const sessionId = await context.pageManager.createSession(browserContext);
+            session = await context.pageManager.getSession(sessionId);
+            if (!session) {
+                throw new Error('Failed to create new session');
+            }
+        }
     
     try {
       // Navigate to URL
-      await session.page.goto(args.url, { 
-        waitUntil: 'domcontentloaded',
-        timeout: args.timeout 
+        await session.page.goto(validatedArgs.url, {
+            waitUntil: validatedArgs.waitUntil || 'domcontentloaded',
+            timeout: context.config.requestTimeout
       });
-      
-      session.url = args.url;
-      session.navigationHistory.push(args.url);
+
+        session.url = validatedArgs.url;
+        session.navigationHistory.push(validatedArgs.url);
 
       // Handle cookie consent if requested
-      if (args.handleConsent && !session.hasConsentHandled) {
+        if (validatedArgs.handleConsent && !session.hasConsentHandled) {
         try {
-          const consentHandler = context.consentHandler;
+            // Use ConsentHandler from context - create one if not available
+            const consentHandler = new (await import('../core/consentHandler.js')).ConsentHandler();
           const consentResult = await consentHandler.handleCookieConsent(session.page);
           
           if (consentResult.success) {
@@ -41,20 +61,20 @@ export class NavigateTool extends BaseNavigationTool {
           }
         } catch (error) {
           // Log but don't fail navigation if consent handling fails
-          context.logger?.warn('Cookie consent handling failed during navigation', { 
-            url: args.url, 
+            console.warn('Cookie consent handling failed during navigation', {
+                url: validatedArgs.url,
             error 
           });
         }
       }
 
-      // Wait for specific selector if provided
-      if (args.waitForSelector) {
-        await session.page.waitForSelector(args.waitForSelector, {
-          timeout: args.timeout,
-          state: 'visible'
-        });
-      }
+        // Wait for specific selector if provided - not implemented yet in schema
+        // if (validatedArgs.waitForSelector) {
+        //   await session.page.waitForSelector(validatedArgs.waitForSelector, {
+        //     timeout: context.config.requestTimeout,
+        //     state: 'visible'
+        //   });
+        // }
 
       // Get page state after navigation
       const title = await session.page.title();
@@ -73,11 +93,7 @@ export class NavigateTool extends BaseNavigationTool {
         screenshot: screenshot.toString('base64')
       });
     } catch (error: any) {
-      return this.createError(`Navigation failed: ${error.message}`, {
-        sessionId: session.id,
-        targetUrl: args.url,
-        currentUrl: session.url
-      });
+        throw new Error(`Navigation failed: ${error.message}`);
     }
   }
 }

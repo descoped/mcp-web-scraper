@@ -3,10 +3,10 @@
  * Following Microsoft's Playwright MCP patterns
  */
 
-import { z } from 'zod';
-import type { BrowserContext, Page, Browser } from 'playwright';
-import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import {z} from 'zod';
+import type {Browser} from 'playwright';
+import type {Server} from '@modelcontextprotocol/sdk/server/index.js';
+import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
 
 /**
  * Server configuration schema
@@ -260,6 +260,137 @@ export const DEFAULT_BROWSER_CONTEXT: BrowserContextOptions = {
   userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   viewport: { width: 1920, height: 1080 },
 } as const;
+
+/**
+ * Navigation tool schemas and types
+ */
+
+// Page session configuration
+export interface PageSessionConfig {
+    sessionTimeout: number;
+    maxSessions: number;
+    autoHandleConsent: boolean;
+}
+
+// Navigation tool context
+export interface NavigationToolContext extends ToolContext {
+    pageManager?: import('../core/pageManager.js').PageManager;
+}
+
+// Navigate tool arguments
+export const NavigateArgsSchema = z.object({
+    url: z.string().url(),
+    sessionId: z.string().optional(),
+    handleConsent: z.boolean().default(true),
+    waitUntil: z.enum(['load', 'domcontentloaded', 'networkidle']).default('domcontentloaded'),
+});
+
+export type NavigateArgs = z.infer<typeof NavigateArgsSchema>;
+
+// Click tool arguments
+export const ClickArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string().optional(),
+    text: z.string().optional(),
+    coordinate: z.object({
+        x: z.number(),
+        y: z.number(),
+    }).optional(),
+});
+
+export type ClickArgs = z.infer<typeof ClickArgsSchema>;
+
+// Type tool arguments
+export const TypeArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    text: z.string(),
+    submit: z.boolean().default(false),
+    clear: z.boolean().default(true),
+});
+
+export type TypeArgs = z.infer<typeof TypeArgsSchema>;
+
+// Page state tool arguments
+export const PageStateArgsSchema = z.object({
+    sessionId: z.string(),
+    mode: z.enum(['snapshot', 'vision']).default('snapshot'),
+    includeScreenshot: z.boolean().default(false),
+});
+
+export type PageStateArgs = z.infer<typeof PageStateArgsSchema>;
+
+// Login flow arguments
+export const LoginFlowArgsSchema = z.object({
+    loginUrl: z.string().url(),
+    username: z.string(),
+    password: z.string(),
+    usernameSelector: z.string().default('#username, [name="username"], [type="email"]'),
+    passwordSelector: z.string().default('#password, [name="password"], [type="password"]'),
+    submitSelector: z.string().default('#submit, [type="submit"], button[type="submit"]'),
+});
+
+export type LoginFlowArgs = z.infer<typeof LoginFlowArgsSchema>;
+
+// Session scrape arguments
+export const SessionScrapeArgsSchema = z.object({
+    sessionId: z.string(),
+    extractSelectors: z.object({
+        title: z.string().optional(),
+        content: z.string().optional(),
+        author: z.string().optional(),
+        date: z.string().optional(),
+        summary: z.string().optional(),
+    }).optional(),
+});
+
+export type SessionScrapeArgs = z.infer<typeof SessionScrapeArgsSchema>;
+
+// Critical missing tool schemas
+
+// Tab management arguments
+export const TabManageArgsSchema = z.object({
+    action: z.enum(['list', 'new', 'switch', 'close']),
+    tabIndex: z.number().optional(),
+    url: z.string().url().optional(),
+});
+
+export type TabManageArgs = z.infer<typeof TabManageArgsSchema>;
+
+// Network monitoring arguments
+export const NetworkMonitorArgsSchema = z.object({
+    sessionId: z.string(),
+    action: z.enum(['start', 'stop', 'get']),
+    filterUrl: z.string().optional(),
+});
+
+export type NetworkMonitorArgs = z.infer<typeof NetworkMonitorArgsSchema>;
+
+// Drag and drop arguments
+export const DragDropArgsSchema = z.object({
+    sessionId: z.string(),
+    sourceSelector: z.string(),
+    targetSelector: z.string(),
+    sourceCoordinate: z.object({
+        x: z.number(),
+        y: z.number(),
+    }).optional(),
+    targetCoordinate: z.object({
+        x: z.number(),
+        y: z.number(),
+    }).optional(),
+});
+
+export type DragDropArgs = z.infer<typeof DragDropArgsSchema>;
+
+// History navigation arguments
+export const HistoryNavigateArgsSchema = z.object({
+    sessionId: z.string(),
+    direction: z.enum(['back', 'forward']),
+    steps: z.number().default(1),
+});
+
+export type HistoryNavigateArgs = z.infer<typeof HistoryNavigateArgsSchema>;
 
 // Export progress-related types
 export * from './progress.js';

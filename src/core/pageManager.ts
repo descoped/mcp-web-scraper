@@ -2,10 +2,10 @@
  * Page Manager for persistent browser contexts and navigation state
  */
 
-import { Page, BrowserContext } from 'playwright';
-import { v4 as uuidv4 } from 'uuid';
-import { StructuredLogger } from './structuredLogger.js';
-import { ConsentHandler } from './consentHandler.js';
+import {BrowserContext, Page} from 'playwright';
+import {v4 as uuidv4} from 'uuid';
+import type {IStructuredLogger} from '../types/monitoring.js';
+import {ConsentHandler} from './consentHandler.js';
 
 export interface PageSession {
   id: string;
@@ -26,12 +26,12 @@ export interface PageManagerConfig {
 
 export class PageManager {
   private sessions: Map<string, PageSession> = new Map();
-  private logger: StructuredLogger;
+  private logger: IStructuredLogger;
   private config: PageManagerConfig;
   private consentHandler: ConsentHandler;
   private cleanupInterval: NodeJS.Timeout;
 
-  constructor(config: PageManagerConfig, logger: StructuredLogger, consentHandler: ConsentHandler) {
+  constructor(config: PageManagerConfig, logger: IStructuredLogger, consentHandler: ConsentHandler) {
     this.config = config;
     this.logger = logger;
     this.consentHandler = consentHandler;

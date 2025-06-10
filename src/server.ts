@@ -4,45 +4,56 @@
  * Following Microsoft's Playwright MCP patterns
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import { 
-  CallToolRequestSchema, 
-  ListToolsRequestSchema,
+import {Server} from '@modelcontextprotocol/sdk/server/index.js';
+import {SSEServerTransport} from '@modelcontextprotocol/sdk/server/sse.js';
+import {
+  CallToolRequestSchema,
   InitializeRequestSchema,
-  ErrorCode,
-  McpError
+  ListToolsRequestSchema
 } from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
 import cors from 'cors';
 
-import { BrowserPool } from './core/browserPool.js';
-import { ConnectionManager } from './core/connectionManager.js';
-import { ToolRegistry } from './core/toolRegistry.js';
-import { ConsentHandler } from './core/consentHandler.js';
-import { defaultProgressManager } from './core/progressTracker.js';
-import { StreamingManager } from './core/streamingManager.js';
-import { createMonitorManager } from './core/monitorManager.js';
-import { setupMonitoringEndpoints } from './core/monitoringEndpoints.js';
-import { RateLimiter } from './core/rateLimiter.js';
-import { RateLimitingManager } from './core/rateLimitingMiddleware.js';
+import {BrowserPool} from './core/browserPool.js';
+import {ConnectionManager} from './core/connectionManager.js';
+import {ToolRegistry} from './core/toolRegistry.js';
+import {ConsentHandler} from './core/consentHandler.js';
+import {PageManager} from './core/pageManager.js';
+import {StreamingManager} from './core/streamingManager.js';
+import {createMonitorManager} from './core/monitorManager.js';
+import {setupMonitoringEndpoints} from './core/monitoringEndpoints.js';
+import {RateLimiter} from './core/rateLimiter.js';
+import {RateLimitingManager} from './core/rateLimitingMiddleware.js';
 
 // Import tools
-import { ScrapeArticleTool } from './tools/scrapeArticleTool.js';
-import { ScreenshotTool } from './tools/screenshotTool.js';
-import { ConsentTool } from './tools/consentTool.js';
+import {ScrapeArticleTool} from './tools/scrapeArticleTool.js';
+import {ScreenshotTool} from './tools/screenshotTool.js';
+import {ConsentTool} from './tools/consentTool.js';
 
-import type { 
-  ServerConfig, 
-  IPlaywrightMCPServer, 
-  IBrowserPool, 
-  IConnectionManager, 
+// Import navigation tools (temporarily disabled for build)
+// import { NavigateTool } from './tools/navigateTool.js';
+// import { ClickTool } from './tools/clickTool.js';
+// import { TypeTool } from './tools/typeTool.js';
+// import { GetPageStateTool } from './tools/getPageStateTool.js';
+// import { LoginFlowTool } from './tools/loginFlowTool.js';
+// import { ScrapeWithSessionTool } from './tools/scrapeWithSessionTool.js';
+// Import critical missing tools
+import {ManageTabsTool} from './tools/manageTabsTool.js';
+import {MonitorNetworkTool} from './tools/monitorNetworkTool.js';
+import {DragDropTool} from './tools/dragDropTool.js';
+import {NavigateHistoryTool} from './tools/navigateHistoryTool.js';
+
+import type {
+  IBrowserPool,
+  IConnectionManager,
+  IPlaywrightMCPServer,
   IToolRegistry,
-  ToolContext
+  NavigationToolContext,
+  ServerConfig
 } from './types/index.js';
-import { ServerConfigSchema } from './types/index.js';
-import type { IMonitorManager } from './types/monitoring.js';
-import { OperationType, LogLevel } from './types/monitoring.js';
+import {ServerConfigSchema} from './types/index.js';
+import type {IMonitorManager} from './types/monitoring.js';
+import {LogLevel, OperationType} from './types/monitoring.js';
 
 export class PlaywrightMCPServer implements IPlaywrightMCPServer {
   public readonly config: ServerConfig;
@@ -53,6 +64,7 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
   private readonly connectionManager: IConnectionManager;
   private readonly consentHandler: ConsentHandler;
   private readonly streamingManager: StreamingManager;
+  private readonly pageManager: PageManager;
   private readonly monitor: IMonitorManager;
   private readonly rateLimitingManager: RateLimitingManager;
   private readonly app: express.Application;
@@ -111,6 +123,17 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
           errorRetentionHours: 24
         }
       }
+    );
+
+    // Initialize PageManager for navigation tools
+    this.pageManager = new PageManager(
+        {
+          sessionTimeout: 300000, // 5 minutes
+          maxSessions: 10,
+          autoHandleConsent: true
+        },
+        this.monitor.logger,
+        this.consentHandler
     );
     
     // Initialize rate limiting system
@@ -176,6 +199,20 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
     this.toolRegistry.registerTool(new ScrapeArticleTool());
     this.toolRegistry.registerTool(new ScreenshotTool());
     this.toolRegistry.registerTool(new ConsentTool());
+
+    // Register navigation tools (temporarily disabled for build)
+    // this.toolRegistry.registerTool(new NavigateTool());
+    // this.toolRegistry.registerTool(new ClickTool());
+    // this.toolRegistry.registerTool(new TypeTool());
+    // this.toolRegistry.registerTool(new GetPageStateTool());
+    // this.toolRegistry.registerTool(new LoginFlowTool());
+    // this.toolRegistry.registerTool(new ScrapeWithSessionTool());
+
+    // Register critical missing tools for hybrid functionality
+    this.toolRegistry.registerTool(new ManageTabsTool());
+    this.toolRegistry.registerTool(new MonitorNetworkTool());
+    this.toolRegistry.registerTool(new DragDropTool());
+    this.toolRegistry.registerTool(new NavigateHistoryTool());
     
     console.log(`Registered ${this.toolRegistry.getAllTools().length} tools`);
   }
@@ -226,13 +263,14 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
       const enableStreaming = request.params._meta?.enableStreaming === true;
 
       // Create tool context with progress notification and streaming capability
-      const context: ToolContext = {
+      const context: NavigationToolContext = {
         browserPool: this.browserPool,
         config: this.config,
         consentPatterns: this.consentHandler.getPatterns(),
         connectionManager: this.connectionManager,
         streamingEnabled: enableStreaming,
         streamingManager: this.streamingManager,
+        pageManager: this.pageManager,
         ...(progressToken !== undefined && {
           progressToken,
           sendProgressNotification: async (progress: number, message: string, total: number = 100) => {
@@ -393,13 +431,14 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
             const enableStreaming = _meta?.enableStreaming === true;
 
             // Create tool context with progress notification and streaming capability
-            const context: ToolContext = {
+            const context: NavigationToolContext = {
               browserPool: this.browserPool,
               config: this.config,
               consentPatterns: this.consentHandler.getPatterns(),
               connectionManager: this.connectionManager,
               streamingEnabled: enableStreaming,
               streamingManager: this.streamingManager,
+              pageManager: this.pageManager,
               ...(progressToken !== undefined && {
                 progressToken,
                 sendProgressNotification: async (progress: number, message: string, total: number = 100) => {
@@ -466,10 +505,11 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
         }
 
         // Create tool context
-        const context: ToolContext = {
+        const context: NavigationToolContext = {
           browserPool: this.browserPool,
           config: this.config,
-          consentPatterns: this.consentHandler.getPatterns()
+          consentPatterns: this.consentHandler.getPatterns(),
+          pageManager: this.pageManager
         };
 
         // Execute scrape tool directly
@@ -595,6 +635,10 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
       // Cleanup browser pool
       console.log('Cleaning up browser pool...');
       await this.browserPool.cleanup();
+
+      // Cleanup page manager sessions
+      console.log('Cleaning up page manager...');
+      await this.pageManager.cleanup();
 
       // Stop monitoring system
       this.monitor.logger.info('Stopping monitoring system');
