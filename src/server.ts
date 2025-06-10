@@ -64,13 +64,12 @@ import {BrowserGenerateTestTool} from './tools/browserGenerateTestTool.js';
 
 // Import remaining tools for 100% feature parity (simplified implementations)
 import {BrowserFindTextTool} from './tools/browserFindTextToolSimple.js';
-// Temporarily using simpler implementations
-// import {BrowserFindElementTool} from './tools/browserFindElementTool.js';
-// import {BrowserDescribeElementTool} from './tools/browserDescribeElementTool.js';
-// import {BrowserAnnotatePageTool} from './tools/browserAnnotatePageTool.js';
-// import {BrowserGetElementTextTool} from './tools/browserGetElementTextTool.js';
-// import {BrowserWaitForPageStateTool} from './tools/browserWaitForPageStateTool.js';
-// import {BrowserExecuteJavascriptTool} from './tools/browserExecuteJavascriptTool.js';
+import {BrowserFindElementTool} from './tools/browserFindElementToolSimple.js';
+import {BrowserDescribeElementTool} from './tools/browserDescribeElementToolSimple.js';
+import {BrowserAnnotatePageTool} from './tools/browserAnnotatePageToolSimple.js';
+import {BrowserGetElementTextTool} from './tools/browserGetElementTextToolSimple.js';
+import {BrowserWaitForPageStateTool} from './tools/browserWaitForPageStateToolSimple.js';
+import {BrowserExecuteJavascriptTool} from './tools/browserExecuteJavascriptToolSimple.js';
 import type {
   IBrowserPool,
   IConnectionManager,
@@ -261,11 +260,14 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
     this.toolRegistry.registerTool(new BrowserInstallTool());
     this.toolRegistry.registerTool(new BrowserGenerateTestTool());
 
-    // Register remaining tool for Microsoft Playwright MCP feature parity (simplified)
+    // Register remaining tools for 100% Microsoft Playwright MCP feature parity
     this.toolRegistry.registerTool(new BrowserFindTextTool());
-    // TODO: Complete implementations of remaining 6 tools:
-    // - browser_find_element, browser_describe_element, browser_annotate_page
-    // - browser_get_element_text, browser_wait_for_page_state, browser_execute_javascript
+    this.toolRegistry.registerTool(new BrowserFindElementTool());
+    this.toolRegistry.registerTool(new BrowserDescribeElementTool());
+    this.toolRegistry.registerTool(new BrowserAnnotatePageTool());
+    this.toolRegistry.registerTool(new BrowserGetElementTextTool());
+    this.toolRegistry.registerTool(new BrowserWaitForPageStateTool());
+    this.toolRegistry.registerTool(new BrowserExecuteJavascriptTool());
     
     console.log(`Registered ${this.toolRegistry.getAllTools().length} tools`);
   }
