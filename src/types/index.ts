@@ -575,6 +575,104 @@ export const BrowserGenerateTestArgsSchema = z.object({
 
 export type BrowserGenerateTestArgs = z.infer<typeof BrowserGenerateTestArgsSchema>;
 
+// Browser find text arguments
+export const BrowserFindTextArgsSchema = z.object({
+    sessionId: z.string(),
+    text: z.string(),
+    strategy: z.enum(['exact', 'partial', 'regex', 'case-insensitive']).default('partial'),
+    maxResults: z.number().min(1).max(100).default(10),
+    includeHidden: z.boolean().default(false),
+    timeout: z.number().optional(),
+});
+
+export type BrowserFindTextArgs = z.infer<typeof BrowserFindTextArgsSchema>;
+
+// Browser find element arguments
+export const BrowserFindElementArgsSchema = z.object({
+    sessionId: z.string(),
+    description: z.string(),
+    strategy: z.enum(['text', 'aria-label', 'placeholder', 'title', 'alt', 'combined']).default('combined'),
+    maxResults: z.number().min(1).max(20).default(5),
+    includeHidden: z.boolean().default(false),
+    timeout: z.number().optional(),
+});
+
+export type BrowserFindElementArgs = z.infer<typeof BrowserFindElementArgsSchema>;
+
+// Browser describe element arguments
+export const BrowserDescribeElementArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    includePosition: z.boolean().default(true),
+    includeStyles: z.boolean().default(false),
+    includeAccessibility: z.boolean().default(true),
+    includeContext: z.boolean().default(true),
+});
+
+export type BrowserDescribeElementArgs = z.infer<typeof BrowserDescribeElementArgsSchema>;
+
+// Browser annotate page arguments
+export const BrowserAnnotatePageArgsSchema = z.object({
+    sessionId: z.string(),
+    annotations: z.array(z.object({
+        type: z.enum(['highlight', 'arrow', 'text', 'box', 'circle']),
+        selector: z.string().optional(),
+        position: z.object({
+            x: z.number(),
+            y: z.number(),
+        }).optional(),
+        text: z.string().optional(),
+        color: z.string().default('#ff0000'),
+        fontSize: z.number().default(16),
+        width: z.number().optional(),
+        height: z.number().optional(),
+    })),
+    outputPath: z.string().optional(),
+    includeOriginal: z.boolean().default(true),
+});
+
+export type BrowserAnnotatePageArgs = z.infer<typeof BrowserAnnotatePageArgsSchema>;
+
+// Browser get element text arguments
+export const BrowserGetElementTextArgsSchema = z.object({
+    sessionId: z.string(),
+    selector: z.string(),
+    extraction: z.enum(['textContent', 'innerText', 'innerHTML', 'outerHTML', 'value']).default('textContent'),
+    trim: z.boolean().default(true),
+    includeChildren: z.boolean().default(true),
+    timeout: z.number().optional(),
+});
+
+export type BrowserGetElementTextArgs = z.infer<typeof BrowserGetElementTextArgsSchema>;
+
+// Browser wait for page state arguments
+export const BrowserWaitForPageStateArgsSchema = z.object({
+    sessionId: z.string(),
+    state: z.enum(['load', 'domcontentloaded', 'networkidle']).default('load'),
+    condition: z.object({
+        selector: z.string().optional(),
+        text: z.string().optional(),
+        url: z.string().optional(),
+        function: z.string().optional(),
+    }).optional(),
+    timeout: z.number().default(30000),
+    pollInterval: z.number().default(100),
+});
+
+export type BrowserWaitForPageStateArgs = z.infer<typeof BrowserWaitForPageStateArgsSchema>;
+
+// Browser execute javascript arguments
+export const BrowserExecuteJavascriptArgsSchema = z.object({
+    sessionId: z.string(),
+    script: z.string(),
+    args: z.array(z.any()).default([]),
+    includeResult: z.boolean().default(true),
+    timeout: z.number().default(10000),
+    context: z.enum(['page', 'frame', 'worker']).default('page'),
+});
+
+export type BrowserExecuteJavascriptArgs = z.infer<typeof BrowserExecuteJavascriptArgsSchema>;
+
 // Export progress-related types
 export * from './progress.js';
 

@@ -1,0 +1,484 @@
+/**
+ * Browser find element tool for AI-powered element discovery
+ * Provides intelligent element finding by natural language description
+ */
+
+import {zodToJsonSchema} from 'zod-to-json-schema';
+import {BaseTool} from '../core/toolRegistry.js';
+import type {BrowserFindElementArgs, NavigationToolContext, ToolResult} from '../types/index.js';
+import {BrowserFindElementArgsSchema} from '../types/index.js';
+
+interface ElementMatch {
+    selector: string;
+    element: {
+        tagName: string;
+        id?: string;
+        className?: string;
+        text: string;
+        ariaLabel?: string;
+        title?: string;
+        placeholder?: string;
+        alt?: string;
+        type?: string;
+        role?: string;
+    };
+    score: number;
+    reasons: string[];
+    boundingBox: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    isVisible: boolean;
+    isInteractive: boolean;
+    context: {
+        parentText: string;
+        nearbyLabels: string[];
+        formContext?: string;
+    };
+}
+
+export class BrowserFindElementTool extends BaseTool {
+    public readonly name = 'browser_find_element';
+    public readonly description = 'Find elements by natural language description using intelligent matching';
+    public readonly inputSchema = zodToJsonSchema(BrowserFindElementArgsSchema);
+
+    async execute(args: Record<string, unknown>, context: NavigationToolContext): Promise<ToolResult> {
+        const validatedArgs = this.validateArgs<BrowserFindElementArgs>(args, BrowserFindElementArgsSchema);
+
+        if (!context.pageManager) {
+            throw new Error('Page manager not available. Use navigation tools to create a session first.');
+        }
+
+        const session = await context.pageManager.getSession(validatedArgs.sessionId);
+        if (!session) {
+            throw new Error(`Session ${validatedArgs.sessionId} not found`);
+        }
+
+        try {
+            // Find element matches using description
+            const matches = await this.findElementsByDescription(
+                session.page,
+                validatedArgs.description,
+                validatedArgs.strategy,
+                validatedArgs.maxResults,
+                validatedArgs.includeHidden,
+                validatedArgs.timeout || context.config.requestTimeout
+            );
+
+            // Analyze element patterns
+            const elementAnalysis = await this.analyzeElementPatterns(session.page, validatedArgs.description);
+
+            // Get suggestions for similar elements
+            const suggestions = await this.getSuggestions(session.page, validatedArgs.description, matches);
+
+            // Update session
+            session.lastActivity = new Date();
+
+            return this.createResult({
+                sessionId: session.id,
+                url: session.url,
+                navigationHistory: session.navigationHistory,
+                hasConsentHandled: session.hasConsentHandled,
+                timestamp: new Date().toISOString(),
+                elementSearch: {
+                    success: true,
+                    description: validatedArgs.description,
+                    strategy: validatedArgs.strategy,
+                    totalMatches: matches.length,
+                    visibleMatches: matches.filter(m => m.isVisible).length,
+                    interactiveMatches: matches.filter(m => m.isInteractive).length,
+                    matches: matches.slice(0, validatedArgs.maxResults),
+                    analysis: elementAnalysis,
+                    suggestions,
+                    searchSettings: {
+                        maxResults: validatedArgs.maxResults,
+                        includeHidden: validatedArgs.includeHidden,
+                        timeout: validatedArgs.timeout
+                    }
+                }
+            });
+
+        } catch (error) {
+            throw new Error(`Element search failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+
+    private async findElementsByDescription(
+        page: any,
+        description: string,
+        strategy: string,
+        maxResults: number,
+        includeHidden: boolean,
+        timeout: number
+    ): Promise<ElementMatch[]> {
+        try {
+            return await page.evaluate(
+                ({ description, strategy, maxResults, includeHidden }) => {
+                    const matches: ElementMatch[] = [];
+                    const descriptionLower = description.toLowerCase();
+                    const keywords = descriptionLower.split(/\s+/).filter(word => word.length > 2);
+
+                    // Get all interactive and relevant elements
+                    const selectors = [
+                        'button', 'input', 'select', 'textarea', 'a[href]',
+                        '[role="button"]', '[role="link"]', '[role="tab"]', '[role="menuitem"]',
+                        '[onclick]', '[data-testid]', '[aria-label]',
+                        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                        'p', 'span', 'div', 'label', 'img'
+                    ];
+
+                    const elements = document.querySelectorAll(selectors.join(', '));
+
+                    for (const element of elements) {
+                        if (matches.length >= maxResults) break;
+
+                        const match = this.analyzeElement(element, description, descriptionLower, keywords, strategy, includeHidden);
+                        if (match && match.score > 0) {
+                            matches.push(match);
+                        }
+                    }
+
+                    // Sort by score (highest first)
+                    matches.sort((a, b) => b.score - a.score);
+
+                    return matches;
+
+                    function analyzeElement(
+                        element: Element,
+                        description: string,
+                        descriptionLower: string,
+                        keywords: string[],
+                        strategy: string,
+                        includeHidden: boolean
+                    ): ElementMatch | null {
+                        const htmlElement = element as HTMLElement;
+                        
+                        // Check visibility
+                        const style = getComputedStyle(htmlElement);
+                        const isVisible = style.display !== 'none' && 
+                                         style.visibility !== 'hidden' && 
+                                         style.opacity !== '0';
+
+                        if (!includeHidden && !isVisible) return null;
+
+                        // Get element properties
+                        const tagName = element.tagName.toLowerCase();
+                        const id = htmlElement.id;
+                        const className = htmlElement.className;
+                        const text = htmlElement.textContent?.trim() || '';
+                        const ariaLabel = htmlElement.getAttribute('aria-label');
+                        const title = htmlElement.getAttribute('title');
+                        const placeholder = (htmlElement as any).placeholder;
+                        const alt = (htmlElement as any).alt;
+                        const type = (htmlElement as any).type;
+                        const role = htmlElement.getAttribute('role');
+
+                        // Calculate matching score
+                        let score = 0;
+                        const reasons: string[] = [];
+
+                        // Strategy-based matching
+                        if (strategy === 'text' || strategy === 'combined') {
+                            if (text.toLowerCase().includes(descriptionLower)) {
+                                score += 50;
+                                reasons.push('Text content matches');
+                            }
+                            
+                            keywords.forEach(keyword => {
+                                if (text.toLowerCase().includes(keyword)) {
+                                    score += 10;
+                                    reasons.push(`Contains keyword: ${keyword}`);
+                                }
+                            });
+                        }
+
+                        if (strategy === 'aria-label' || strategy === 'combined') {
+                            if (ariaLabel && ariaLabel.toLowerCase().includes(descriptionLower)) {
+                                score += 40;
+                                reasons.push('ARIA label matches');
+                            }
+                        }
+
+                        if (strategy === 'placeholder' || strategy === 'combined') {
+                            if (placeholder && placeholder.toLowerCase().includes(descriptionLower)) {
+                                score += 35;
+                                reasons.push('Placeholder matches');
+                            }
+                        }
+
+                        if (strategy === 'title' || strategy === 'combined') {
+                            if (title && title.toLowerCase().includes(descriptionLower)) {
+                                score += 30;
+                                reasons.push('Title matches');
+                            }
+                        }
+
+                        if (strategy === 'alt' || strategy === 'combined') {
+                            if (alt && alt.toLowerCase().includes(descriptionLower)) {
+                                score += 30;
+                                reasons.push('Alt text matches');
+                            }
+                        }
+
+                        // Additional scoring for context
+                        if (id && id.toLowerCase().includes(descriptionLower)) {
+                            score += 25;
+                            reasons.push('ID matches');
+                        }
+
+                        if (className) {
+                            const classes = className.split(' ');
+                            classes.forEach(cls => {
+                                if (cls.toLowerCase().includes(descriptionLower)) {
+                                    score += 15;
+                                    reasons.push(`Class name matches: ${cls}`);
+                                }
+                            });
+                        }
+
+                        // Element type relevance
+                        const elementTypeScore = this.getElementTypeScore(tagName, type, role, description);
+                        score += elementTypeScore.score;
+                        if (elementTypeScore.reason) {
+                            reasons.push(elementTypeScore.reason);
+                        }
+
+                        if (score === 0) return null;
+
+                        // Get bounding box
+                        const rect = htmlElement.getBoundingClientRect();
+
+                        // Generate selector
+                        const selector = this.generateSelector(htmlElement);
+
+                        // Check if interactive
+                        const isInteractive = this.isInteractiveElement(htmlElement);
+
+                        // Get context
+                        const context = this.getElementContext(htmlElement);
+
+                        return {
+                            selector,
+                            element: {
+                                tagName,
+                                id: id || undefined,
+                                className: className || undefined,
+                                text: text.substring(0, 100),
+                                ariaLabel: ariaLabel || undefined,
+                                title: title || undefined,
+                                placeholder: placeholder || undefined,
+                                alt: alt || undefined,
+                                type: type || undefined,
+                                role: role || undefined
+                            },
+                            score,
+                            reasons,
+                            boundingBox: {
+                                x: rect.x,
+                                y: rect.y,
+                                width: rect.width,
+                                height: rect.height
+                            },
+                            isVisible,
+                            isInteractive,
+                            context
+                        };
+                    }
+
+                    function getElementTypeScore(tagName: string, type: string, role: string, description: string): { score: number, reason?: string } {
+                        const descLower = description.toLowerCase();
+                        
+                        // Button-related
+                        if (descLower.includes('button') || descLower.includes('click')) {
+                            if (tagName === 'button' || type === 'button' || role === 'button') {
+                                return { score: 20, reason: 'Element type matches description (button)' };
+                            }
+                        }
+
+                        // Input-related
+                        if (descLower.includes('input') || descLower.includes('field') || descLower.includes('form')) {
+                            if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
+                                return { score: 20, reason: 'Element type matches description (input)' };
+                            }
+                        }
+
+                        // Link-related
+                        if (descLower.includes('link')) {
+                            if (tagName === 'a' || role === 'link') {
+                                return { score: 20, reason: 'Element type matches description (link)' };
+                            }
+                        }
+
+                        // Heading-related
+                        if (descLower.includes('heading') || descLower.includes('title')) {
+                            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+                                return { score: 15, reason: 'Element type matches description (heading)' };
+                            }
+                        }
+
+                        // Image-related
+                        if (descLower.includes('image') || descLower.includes('img') || descLower.includes('picture')) {
+                            if (tagName === 'img') {
+                                return { score: 20, reason: 'Element type matches description (image)' };
+                            }
+                        }
+
+                        return { score: 0 };
+                    }
+
+                    function generateSelector(element: HTMLElement): string {
+                        if (element.id) {
+                            return `#${element.id}`;
+                        }
+
+                        const tagName = element.tagName.toLowerCase();
+                        const classNames = Array.from(element.classList);
+                        
+                        if (classNames.length > 0) {
+                            return `${tagName}.${classNames.join('.')}`;
+                        }
+
+                        // Use data attributes if available
+                        const testId = element.getAttribute('data-testid');
+                        if (testId) {
+                            return `[data-testid="${testId}"]`;
+                        }
+
+                        // Generate nth-child selector
+                        const parent = element.parentElement;
+                        if (parent) {
+                            const siblings = Array.from(parent.children);
+                            const index = siblings.indexOf(element) + 1;
+                            return `${tagName}:nth-child(${index})`;
+                        }
+
+                        return tagName;
+                    }
+
+                    function isInteractiveElement(element: HTMLElement): boolean {
+                        const tagName = element.tagName.toLowerCase();
+                        const interactiveTags = ['button', 'input', 'select', 'textarea', 'a'];
+                        
+                        if (interactiveTags.includes(tagName)) return true;
+                        if (element.hasAttribute('onclick')) return true;
+                        if (element.getAttribute('role') === 'button') return true;
+                        if (element.hasAttribute('tabindex')) return true;
+                        
+                        return false;
+                    }
+
+                    function getElementContext(element: HTMLElement) {
+                        const parent = element.parentElement;
+                        const parentText = parent?.textContent?.trim().substring(0, 100) || '';
+
+                        // Find nearby labels
+                        const nearbyLabels: string[] = [];
+                        const labels = document.querySelectorAll('label');
+                        labels.forEach(label => {
+                            const labelFor = label.getAttribute('for');
+                            if (labelFor === element.id) {
+                                nearbyLabels.push(label.textContent?.trim() || '');
+                            }
+                        });
+
+                        // Check if in a form
+                        const form = element.closest('form');
+                        const formContext = form ? `Form: ${form.getAttribute('action') || 'no action'}` : undefined;
+
+                        return {
+                            parentText,
+                            nearbyLabels,
+                            formContext
+                        };
+                    }
+                },
+                { description, strategy, maxResults, includeHidden }
+            );
+        } catch (error) {
+            throw new Error(`Failed to find elements: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+
+    private async analyzeElementPatterns(page: any, description: string) {
+        try {
+            return await page.evaluate((description) => {
+                const descLower = description.toLowerCase();
+                
+                // Count element types
+                const elementTypes = {
+                    buttons: document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]').length,
+                    inputs: document.querySelectorAll('input, textarea, select').length,
+                    links: document.querySelectorAll('a[href]').length,
+                    headings: document.querySelectorAll('h1, h2, h3, h4, h5, h6').length,
+                    images: document.querySelectorAll('img').length,
+                    interactive: document.querySelectorAll('button, input, select, textarea, a[href], [onclick], [role="button"]').length
+                };
+
+                // Identify potential target types
+                const targetTypes = [];
+                if (descLower.includes('button') || descLower.includes('click')) targetTypes.push('button');
+                if (descLower.includes('input') || descLower.includes('field')) targetTypes.push('input');
+                if (descLower.includes('link')) targetTypes.push('link');
+                if (descLower.includes('heading') || descLower.includes('title')) targetTypes.push('heading');
+                if (descLower.includes('image')) targetTypes.push('image');
+
+                return {
+                    elementCounts: elementTypes,
+                    likelyTargetTypes: targetTypes,
+                    hasFormElements: elementTypes.inputs > 0,
+                    hasInteractiveElements: elementTypes.interactive > 0,
+                    pageComplexity: Object.values(elementTypes).reduce((sum, count) => sum + count, 0)
+                };
+            }, description);
+        } catch (error) {
+            return {
+                elementCounts: {},
+                likelyTargetTypes: [],
+                hasFormElements: false,
+                hasInteractiveElements: false,
+                pageComplexity: 0,
+                error: error instanceof Error ? error.message : String(error)
+            };
+        }
+    }
+
+    private async getSuggestions(page: any, description: string, matches: ElementMatch[]) {
+        try {
+            const suggestions = [];
+
+            if (matches.length === 0) {
+                suggestions.push('No elements found. Try using more specific keywords.');
+                suggestions.push('Check if the element exists on the current page.');
+                suggestions.push('Try different search strategies (text, aria-label, placeholder, etc.).');
+            } else if (matches.length === 1) {
+                suggestions.push('Perfect match found!');
+            } else {
+                suggestions.push(`Found ${matches.length} potential matches. Consider the highest scored element.`);
+                
+                const topMatch = matches[0];
+                if (topMatch.score < 30) {
+                    suggestions.push('Low confidence match. Consider refining your description.');
+                }
+            }
+
+            // Analyze why elements might not match
+            const hasVisibilityIssues = matches.some(m => !m.isVisible);
+            if (hasVisibilityIssues) {
+                suggestions.push('Some matching elements are hidden. Set includeHidden=true to see them.');
+            }
+
+            // Element-specific suggestions
+            const elementTypes = matches.map(m => m.element.tagName);
+            const uniqueTypes = [...new Set(elementTypes)];
+            if (uniqueTypes.length > 1) {
+                suggestions.push(`Found elements of different types: ${uniqueTypes.join(', ')}`);
+            }
+
+            return suggestions;
+        } catch (error) {
+            return [`Error generating suggestions: ${error instanceof Error ? error.message : String(error)}`];
+        }
+    }
+}

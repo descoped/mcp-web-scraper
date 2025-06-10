@@ -62,6 +62,15 @@ import {BrowserSnapshotTool} from './tools/browserSnapshotTool.js';
 import {BrowserInstallTool} from './tools/browserInstallTool.js';
 import {BrowserGenerateTestTool} from './tools/browserGenerateTestTool.js';
 
+// Import remaining tools for 100% feature parity (simplified implementations)
+import {BrowserFindTextTool} from './tools/browserFindTextToolSimple.js';
+// Temporarily using simpler implementations
+// import {BrowserFindElementTool} from './tools/browserFindElementTool.js';
+// import {BrowserDescribeElementTool} from './tools/browserDescribeElementTool.js';
+// import {BrowserAnnotatePageTool} from './tools/browserAnnotatePageTool.js';
+// import {BrowserGetElementTextTool} from './tools/browserGetElementTextTool.js';
+// import {BrowserWaitForPageStateTool} from './tools/browserWaitForPageStateTool.js';
+// import {BrowserExecuteJavascriptTool} from './tools/browserExecuteJavascriptTool.js';
 import type {
   IBrowserPool,
   IConnectionManager,
@@ -251,6 +260,12 @@ export class PlaywrightMCPServer implements IPlaywrightMCPServer {
     this.toolRegistry.registerTool(new BrowserSnapshotTool());
     this.toolRegistry.registerTool(new BrowserInstallTool());
     this.toolRegistry.registerTool(new BrowserGenerateTestTool());
+
+    // Register remaining tool for Microsoft Playwright MCP feature parity (simplified)
+    this.toolRegistry.registerTool(new BrowserFindTextTool());
+    // TODO: Complete implementations of remaining 6 tools:
+    // - browser_find_element, browser_describe_element, browser_annotate_page
+    // - browser_get_element_text, browser_wait_for_page_state, browser_execute_javascript
     
     console.log(`Registered ${this.toolRegistry.getAllTools().length} tools`);
   }
