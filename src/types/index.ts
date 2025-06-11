@@ -103,6 +103,21 @@ export interface IMCPConnection {
 }
 
 /**
+ * Request metadata for correlation and tracking
+ */
+export interface RequestMetadata {
+    correlationId?: string;        // Client-provided correlation ID (e.g., async-task-worker task_id)
+    requestId?: string;            // MCP request ID
+    connectionId?: string;         // SSE connection ID
+    clientInfo?: {
+        name?: string;
+        version?: string;
+        userAgent?: string;
+    };
+    timestamp?: string;
+}
+
+/**
  * Tool execution context
  */
 export interface ToolContext {
@@ -110,6 +125,8 @@ export interface ToolContext {
   config: ServerConfig;
   consentPatterns: ConsentPatterns;
   progressToken?: string | number;
+    correlationId?: string;        // NEW: Primary correlation identifier
+    requestMetadata?: RequestMetadata; // NEW: Rich request context
   sendProgressNotification?: (progress: number, message: string, total?: number) => Promise<void>;
   connectionManager?: IConnectionManager;
   streamingEnabled?: boolean;
@@ -147,10 +164,18 @@ export const ToolResultSchema = z.object({
 export type ToolResult = z.infer<typeof ToolResultSchema>;
 
 /**
+ * Output format types
+ */
+export const OutputFormatSchema = z.enum(['text', 'html', 'markdown']);
+export type OutputFormat = z.infer<typeof OutputFormatSchema>;
+
+/**
  * Article scraping arguments
  */
 export const ScrapeArticleArgsSchema = z.object({
   url: z.string().url(),
+    outputFormats: z.array(OutputFormatSchema).default(['text']),
+    correlation_id: z.string().optional(),
   waitForSelector: z.string().optional(),
   extractSelectors: z.object({
     title: z.string().optional(),
@@ -169,6 +194,7 @@ export type ScrapeArticleArgs = z.infer<typeof ScrapeArticleArgsSchema>;
 export const ScreenshotArgsSchema = z.object({
   url: z.string().url(),
   fullPage: z.boolean().default(false),
+    correlation_id: z.string().optional(),
 });
 
 export type ScreenshotArgs = z.infer<typeof ScreenshotArgsSchema>;
@@ -179,6 +205,7 @@ export type ScreenshotArgs = z.infer<typeof ScreenshotArgsSchema>;
 export const ConsentArgsSchema = z.object({
   url: z.string().url(),
   timeout: z.number().int().min(1000).max(10000).default(3000),
+    correlation_id: z.string().optional(),
 });
 
 export type ConsentArgs = z.infer<typeof ConsentArgsSchema>;
@@ -195,7 +222,9 @@ export const ArticleResultSchema = z.object({
     date: z.string().optional(),
     summary: z.string().optional(),
   }),
-  fullText: z.string(),
+    fullText: z.string().optional(),
+    fullHtml: z.string().optional(),
+    fullMarkdown: z.string().optional(),
   timestamp: z.string(),
   cookieConsent: ConsentResultSchema,
 });

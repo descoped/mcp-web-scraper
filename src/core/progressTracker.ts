@@ -5,16 +5,17 @@
  * like article scraping and consent handling.
  */
 
-import { EventEmitter } from 'events';
+import {EventEmitter} from 'events';
 import {
-  ProgressEvent,
-  ProgressStage,
-  ProgressEventType,
-  ProgressEventFactory,
+  CorrelationContext,
+  MCPProgressNotification,
   ProgressConfig,
   ProgressConfigSchema,
-  MCPProgressNotification
+  ProgressEvent,
+  ProgressEventFactory,
+  ProgressStage
 } from '../types/progress.js';
+import type {RequestMetadata} from '../types/index.js';
 
 /**
  * Progress tracker manages progress events for a single operation
@@ -25,6 +26,7 @@ export class OperationProgressTracker {
   private readonly startTime: number;
   private readonly emitter: EventEmitter;
   private readonly config: ProgressConfig;
+    private readonly correlationContext: CorrelationContext;
   
   private currentStage: ProgressStage = ProgressStage.INITIALIZING;
   private stageStartTime: number = Date.now();
@@ -35,13 +37,21 @@ export class OperationProgressTracker {
     operationId: string,
     toolName: string,
     emitter: EventEmitter,
-    config: Partial<ProgressConfig> = {}
+    config: Partial<ProgressConfig> = {},
+    requestMetadata?: RequestMetadata
   ) {
     this.operationId = operationId;
     this.toolName = toolName;
     this.startTime = Date.now();
     this.emitter = emitter;
     this.config = ProgressConfigSchema.parse(config);
+
+      // Extract correlation context from request metadata
+      this.correlationContext = {
+          correlationId: requestMetadata?.correlationId,
+          requestId: requestMetadata?.requestId,
+          connectionId: requestMetadata?.connectionId
+      };
   }
 
   /**
@@ -68,7 +78,10 @@ export class OperationProgressTracker {
         this.toolName,
         stage,
         message,
-        options
+          {
+              ...options,
+              correlation: this.correlationContext
+          }
       );
       this.emitProgress(event);
     }
@@ -103,7 +116,10 @@ export class OperationProgressTracker {
         this.currentStage,
         Math.min(Math.max(progress, 0), 100), // Clamp between 0-100
         message,
-        options
+          {
+              ...options,
+              correlation: this.correlationContext
+          }
       );
       this.emitProgress(event);
     }
@@ -124,7 +140,8 @@ export class OperationProgressTracker {
         this.currentStage,
         actualDuration,
         stageResults || {},
-        message
+          message,
+          this.correlationContext
       );
       this.emitProgress(event);
     }
@@ -148,7 +165,8 @@ export class OperationProgressTracker {
         this.toolName,
         totalDuration,
         finalResults,
-        message
+          message,
+          this.correlationContext
       );
       this.emitProgress(event);
     }
@@ -171,7 +189,8 @@ export class OperationProgressTracker {
         this.toolName,
         error,
         this.currentStage,
-        message
+          message,
+          this.correlationContext
       );
       this.emitProgress(event);
     }
@@ -222,12 +241,17 @@ export class ProgressManager {
   /**
    * Create a new operation tracker
    */
-  createOperation(operationId: string, toolName: string): OperationProgressTracker {
+  createOperation(
+      operationId: string,
+      toolName: string,
+      requestMetadata?: RequestMetadata
+  ): OperationProgressTracker {
     const tracker = new OperationProgressTracker(
       operationId,
       toolName,
       this.emitter,
-      this.config
+        this.config,
+        requestMetadata
     );
 
     this.activeOperations.set(operationId, tracker);

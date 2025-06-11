@@ -5,7 +5,7 @@
  * long-running operations like article scraping and consent handling.
  */
 
-import { z } from 'zod';
+import {z} from 'zod';
 
 /**
  * Progress event stages for article scraping workflow
@@ -37,6 +37,11 @@ export enum ProgressEventType {
 export const BaseProgressEventSchema = z.object({
   // Unique identifier for the operation
   operationId: z.string().uuid(),
+
+    // NEW: Correlation fields for client tracking
+    correlationId: z.string().optional(),     // Client-provided correlation ID (e.g., async-task-worker task_id)
+    requestId: z.string().optional(),         // MCP request ID
+    connectionId: z.string().optional(),      // SSE connection ID
   
   // Tool name that triggered the operation
   toolName: z.string(),
@@ -196,6 +201,15 @@ export const ProgressConfigSchema = z.object({
 export type ProgressConfig = z.infer<typeof ProgressConfigSchema>;
 
 /**
+ * Correlation context for progress events
+ */
+export interface CorrelationContext {
+    correlationId?: string;
+    requestId?: string;
+    connectionId?: string;
+}
+
+/**
  * Helper functions for creating progress events
  */
 export class ProgressEventFactory {
@@ -208,10 +222,14 @@ export class ProgressEventFactory {
       estimatedDuration?: number;
       stageData?: Record<string, unknown>;
       metadata?: Record<string, unknown>;
+        correlation?: CorrelationContext;
     }
   ): StageStartedEvent {
     return {
       operationId,
+        correlationId: options?.correlation?.correlationId,
+        requestId: options?.correlation?.requestId,
+        connectionId: options?.correlation?.connectionId,
       toolName,
       eventType: ProgressEventType.STAGE_STARTED,
       stage,
@@ -232,10 +250,14 @@ export class ProgressEventFactory {
     options?: {
       progressDetails?: Record<string, unknown>;
       metadata?: Record<string, unknown>;
+        correlation?: CorrelationContext;
     }
   ): StageProgressEvent {
     return {
       operationId,
+        correlationId: options?.correlation?.correlationId,
+        requestId: options?.correlation?.requestId,
+        connectionId: options?.correlation?.connectionId,
       toolName,
       eventType: ProgressEventType.STAGE_PROGRESS,
       stage,
@@ -253,10 +275,14 @@ export class ProgressEventFactory {
     stage: ProgressStage,
     actualDuration: number,
     stageResults: Record<string, unknown>,
-    message: string = `${stage} completed successfully`
+    message: string = `${stage} completed successfully`,
+    correlation?: CorrelationContext
   ): StageCompletedEvent {
     return {
       operationId,
+        correlationId: correlation?.correlationId,
+        requestId: correlation?.requestId,
+        connectionId: correlation?.connectionId,
       toolName,
       eventType: ProgressEventType.STAGE_COMPLETED,
       stage,
@@ -276,10 +302,14 @@ export class ProgressEventFactory {
     toolName: string,
     totalDuration: number,
     finalResults: Record<string, unknown>,
-    message: string = 'Operation completed successfully'
+    message: string = 'Operation completed successfully',
+    correlation?: CorrelationContext
   ): OperationCompletedEvent {
     return {
       operationId,
+        correlationId: correlation?.correlationId,
+        requestId: correlation?.requestId,
+        connectionId: correlation?.connectionId,
       toolName,
       eventType: ProgressEventType.OPERATION_COMPLETED,
       stage: ProgressStage.COMPLETED,
@@ -296,10 +326,14 @@ export class ProgressEventFactory {
     toolName: string,
     error: { code: string; message: string; details?: Record<string, unknown> },
     stage: ProgressStage,
-    message: string = 'Operation failed'
+    message: string = 'Operation failed',
+    correlation?: CorrelationContext
   ): OperationFailedEvent {
     return {
       operationId,
+        correlationId: correlation?.correlationId,
+        requestId: correlation?.requestId,
+        connectionId: correlation?.connectionId,
       toolName,
       eventType: ProgressEventType.OPERATION_FAILED,
       stage: ProgressStage.FAILED,

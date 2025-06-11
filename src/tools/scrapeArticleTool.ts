@@ -4,41 +4,55 @@
  * Now includes real-time progress notifications
  */
 
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import { v4 as uuidv4 } from 'uuid';
-import type { Browser, BrowserContext, Page } from 'playwright';
-import { BaseTool } from '../core/toolRegistry.js';
-import { ConsentHandler } from '../core/consentHandler.js';
-import { defaultProgressManager, OperationProgressTracker } from '../core/progressTracker.js';
-import { OperationStreamingTracker } from '../core/streamingManager.js';
-import { ContentChunkType } from '../types/streaming.js';
-import type { 
-  ToolResult, 
-  ToolContext, 
-  ScrapeArticleArgs, 
-  ArticleResult,
-  DEFAULT_BROWSER_CONTEXT
-} from '../types/index.js';
-import { ProgressStage } from '../types/progress.js';
-import { 
-  ScrapeArticleArgsSchema, 
+import {zodToJsonSchema} from 'zod-to-json-schema';
+import {v4 as uuidv4} from 'uuid';
+import TurndownService from 'turndown';
+import type {Browser, BrowserContext, Page} from 'playwright';
+import {BaseTool} from '../core/toolRegistry.js';
+import {ConsentHandler} from '../core/consentHandler.js';
+import {defaultProgressManager} from '../core/progressTracker.js';
+import {OperationStreamingTracker} from '../core/streamingManager.js';
+import {ContentChunkType} from '../types/streaming.js';
+import type {ArticleResult, ScrapeArticleArgs, ToolContext, ToolResult} from '../types/index.js';
+import {
   ArticleResultSchema,
-  DEFAULT_BROWSER_CONTEXT as DefaultContext 
+  DEFAULT_BROWSER_CONTEXT as DefaultContext,
+  ScrapeArticleArgsSchema
 } from '../types/index.js';
+import {ProgressStage} from '../types/progress.js';
 
 export class ScrapeArticleTool extends BaseTool {
   public readonly name = 'scrape_article_content';
-  public readonly description = 'Scrape news article content from a URL with intelligent cookie consent handling';
+    public readonly description = 'Scrape news article content from a URL with intelligent cookie consent handling. Supports multiple output formats: text, html, and markdown.';
   public readonly inputSchema = zodToJsonSchema(ScrapeArticleArgsSchema);
 
   private readonly consentHandler = new ConsentHandler();
 
+    // Configure Turndown for HTML to Markdown conversion
+    private readonly turndownService = new TurndownService({
+        headingStyle: 'atx',
+        hr: '---',
+        bulletListMarker: '-',
+        codeBlockStyle: 'fenced',
+        fence: '```',
+        emDelimiter: '_',
+        strongDelimiter: '**',
+        linkStyle: 'inlined',
+        linkReferenceStyle: 'full'
+    });
+
   async execute(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
     const validatedArgs = this.validateArgs<ScrapeArticleArgs>(args, ScrapeArticleArgsSchema);
-    
-    // Create operation tracker for progress notifications
+
+      // Create operation tracker for progress notifications with correlation context
     const operationId = uuidv4();
-    const progressTracker = defaultProgressManager.createOperation(operationId, this.name);
+      const requestMetadata = {
+          correlationId: validatedArgs.correlation_id || context.correlationId,
+          requestId: context.requestMetadata?.requestId,
+          connectionId: context.requestMetadata?.connectionId,
+          timestamp: new Date().toISOString()
+      };
+      const progressTracker = defaultProgressManager.createOperation(operationId, this.name, requestMetadata);
     
     // Create streaming tracker if streaming is enabled
     let streamingTracker: OperationStreamingTracker | null = null;
@@ -253,17 +267,51 @@ export class ScrapeArticleTool extends BaseTool {
         }
       }
 
-      progressTracker.updateProgress(90, 'Extracting full page text');
-      await sendProgress(90, 'Extracting full page text');
-      // Get full page text as fallback
-      const bodyText = await page.$eval('body', el => el.innerText).catch(() => '');
-      
-      // Stream full text in chunks if streaming is enabled and we have substantial content
-      if (streamingTracker && bodyText && bodyText.length > 500) {
+        progressTracker.updateProgress(90, 'Extracting content in requested formats');
+        await sendProgress(90, 'Extracting content in requested formats');
+
+        // Extract content in requested formats
+        const contentResults: {
+            fullText?: string;
+            fullHtml?: string;
+            fullMarkdown?: string;
+        } = {};
+
+        const requestedFormats = validatedArgs.outputFormats || ['text'];
+        console.log(`Generating content in formats: ${requestedFormats.join(', ')}`);
+
+        // Get HTML content first (base for all formats)
+        let htmlContent = '';
+        if (requestedFormats.includes('html') || requestedFormats.includes('markdown')) {
+            htmlContent = await page.content();
+            if (requestedFormats.includes('html')) {
+                contentResults.fullHtml = htmlContent;
+            }
+        }
+
+        // Generate markdown from HTML if requested
+        if (requestedFormats.includes('markdown') && htmlContent) {
+            try {
+                contentResults.fullMarkdown = this.turndownService.turndown(htmlContent);
+            } catch (error) {
+                console.warn('Failed to convert HTML to Markdown:', error);
+                // Fallback to plain text
+                contentResults.fullMarkdown = await page.$eval('body', el => el.innerText).catch(() => '');
+            }
+        }
+
+        // Get plain text if requested
+        if (requestedFormats.includes('text')) {
+            const bodyText = await page.$eval('body', el => el.innerText).catch(() => '');
+            contentResults.fullText = bodyText.slice(0, 10000); // Reasonable limit for text
+        }
+
+        // Stream content in chunks if streaming is enabled and we have substantial content
+        if (streamingTracker && contentResults.fullText && contentResults.fullText.length > 500) {
         const chunkSize = 1000; // Stream in 1000 character chunks
         const chunks = [];
-        for (let i = 0; i < bodyText.length; i += chunkSize) {
-          const chunk = bodyText.slice(i, i + chunkSize);
+            for (let i = 0; i < contentResults.fullText.length; i += chunkSize) {
+                const chunk = contentResults.fullText.slice(i, i + chunkSize);
           chunks.push(chunk);
         }
         
@@ -285,7 +333,12 @@ export class ScrapeArticleTool extends BaseTool {
       progressTracker.completeStage({ 
         extractedFields: Object.keys(extractedData).filter(key => extractedData[key]),
         totalFields: selectorKeys.length,
-        bodyTextLength: bodyText.length 
+          generatedFormats: requestedFormats,
+          contentSizes: {
+              text: contentResults.fullText?.length || 0,
+              html: contentResults.fullHtml?.length || 0,
+              markdown: contentResults.fullMarkdown?.length || 0
+          }
       });
       await sendProgress(92, `Content extraction complete. Title: ${extractedData.title ? 'Found' : 'Not found'}`);
 
@@ -297,7 +350,8 @@ export class ScrapeArticleTool extends BaseTool {
 
       progressTracker.updateProgress(30, 'Structuring extracted data');
       await sendProgress(97, 'Structuring extracted data');
-      // Create result object
+
+        // Create result object with only requested formats
       const result: ArticleResult = {
         url: validatedArgs.url,
         extracted: {
@@ -307,10 +361,20 @@ export class ScrapeArticleTool extends BaseTool {
           date: extractedData.date,
           summary: extractedData.summary,
         },
-        fullText: bodyText.slice(0, 5000), // Limit to prevent excessive size
         timestamp: new Date().toISOString(),
         cookieConsent: consentResult
       };
+
+        // Add content fields based on requested formats
+        if (contentResults.fullText !== undefined) {
+            result.fullText = contentResults.fullText;
+        }
+        if (contentResults.fullHtml !== undefined) {
+            result.fullHtml = contentResults.fullHtml;
+        }
+        if (contentResults.fullMarkdown !== undefined) {
+            result.fullMarkdown = contentResults.fullMarkdown;
+        }
 
       progressTracker.updateProgress(70, 'Validating result structure');
       // Validate result structure
@@ -321,7 +385,12 @@ export class ScrapeArticleTool extends BaseTool {
         resultSize: JSON.stringify(validatedResult).length,
         hasTitle: !!validatedResult.extracted.title,
         hasContent: !!validatedResult.extracted.content,
-        fullTextLength: validatedResult.fullText.length 
+          generatedFormats: requestedFormats,
+          contentSizes: {
+              text: validatedResult.fullText?.length || 0,
+              html: validatedResult.fullHtml?.length || 0,
+              markdown: validatedResult.fullMarkdown?.length || 0
+          }
       });
 
       // Complete streaming if enabled
