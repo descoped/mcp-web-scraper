@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserResizeArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserResizeArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserResizeArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserResizeArgsSchema} from '@/types/index.js';
 
 export class BrowserResizeTool extends BaseTool {
     public readonly name = 'browser_resize';
@@ -95,7 +95,7 @@ export class BrowserResizeTool extends BaseTool {
         }
     }
 
-    private async getViewportInfo(page: any) {
+    private async getViewportInfo(page: import('playwright').Page) {
         try {
             return await page.evaluate(() => {
                 return {
@@ -135,9 +135,12 @@ export class BrowserResizeTool extends BaseTool {
         }
     }
 
-    private async analyzeResponsiveChanges(page: any, before: any, after: any) {
+    private async analyzeResponsiveChanges(page: import('playwright').Page, before: Record<string, unknown>, after: Record<string, unknown>) {
         try {
-            const analysis = await page.evaluate((beforeInfo: any, afterInfo: any) => {
+            const analysis = await page.evaluate(({beforeInfo, afterInfo}: {
+                beforeInfo: Record<string, unknown>,
+                afterInfo: Record<string, unknown>
+            }) => {
                 // Check for media query changes
                 const mediaQueries = [
                     '(max-width: 768px)',
@@ -187,24 +190,24 @@ export class BrowserResizeTool extends BaseTool {
                     hasHamburgerMenu: !!document.querySelector('.hamburger, .menu-toggle, .mobile-menu-toggle'),
                     hasSidebar: !!document.querySelector('.sidebar, .side-nav, aside'),
                     documentChanges: {
-                        widthDelta: afterInfo.documentWidth - beforeInfo.documentWidth,
-                        heightDelta: afterInfo.documentHeight - beforeInfo.documentHeight
+                        widthDelta: (afterInfo.documentWidth as number) - (beforeInfo.documentWidth as number),
+                        heightDelta: (afterInfo.documentHeight as number) - (beforeInfo.documentHeight as number)
                     }
                 };
-            }, before, after);
+            }, {beforeInfo: before, afterInfo: after});
 
             // Determine if changes are significant
             const significantChanges =
                 Math.abs(analysis.documentChanges.widthDelta) > 50 ||
                 Math.abs(analysis.documentChanges.heightDelta) > 100 ||
                 analysis.mediaQueryMatches.length > 0 ||
-                this.getDeviceClass(before.width) !== this.getDeviceClass(after.width);
+                this.getDeviceClass(before.width as number) !== this.getDeviceClass(after.width as number);
 
             return {
                 ...analysis,
                 significantChanges,
-                deviceClassBefore: this.getDeviceClass(before.width),
-                deviceClassAfter: this.getDeviceClass(after.width)
+                deviceClassBefore: this.getDeviceClass(before.width as number),
+                deviceClassAfter: this.getDeviceClass(after.width as number)
             };
 
         } catch (error) {

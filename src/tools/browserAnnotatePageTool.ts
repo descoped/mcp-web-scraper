@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserAnnotatePageArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserAnnotatePageArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserAnnotatePageArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserAnnotatePageArgsSchema} from '@/types/index.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -128,7 +128,7 @@ export class BrowserAnnotatePageTool extends BaseTool {
         }
     }
 
-    private async processAnnotations(page: any, annotations: Annotation[]): Promise<ProcessedAnnotation[]> {
+    private async processAnnotations(page: import('playwright').Page, annotations: Annotation[]): Promise<ProcessedAnnotation[]> {
         const processedAnnotations: ProcessedAnnotation[] = [];
 
         for (const annotation of annotations) {
@@ -181,7 +181,7 @@ export class BrowserAnnotatePageTool extends BaseTool {
                 }
 
                 processedAnnotations.push(processed);
-            } catch (error) {
+            } catch {
                 // Add annotation with error info
                 processed.coordinates = annotation.position || {x: 0, y: 0};
                 processedAnnotations.push(processed);
@@ -191,7 +191,7 @@ export class BrowserAnnotatePageTool extends BaseTool {
         return processedAnnotations;
     }
 
-    private async addAnnotationsToPage(page: any, annotations: ProcessedAnnotation[]): Promise<void> {
+    private async addAnnotationsToPage(page: import('playwright').Page, annotations: ProcessedAnnotation[]): Promise<void> {
         await page.evaluate((annotations: ProcessedAnnotation[]) => {
             // Create annotation container
             const container = document.createElement('div');
@@ -274,7 +274,7 @@ export class BrowserAnnotatePageTool extends BaseTool {
         await page.waitForTimeout(100);
     }
 
-    private async cleanupAnnotations(page: any): Promise<void> {
+    private async cleanupAnnotations(page: import('playwright').Page): Promise<void> {
         await page.evaluate(() => {
             const container = document.getElementById('annotation-container');
             if (container) {
@@ -316,7 +316,7 @@ export class BrowserAnnotatePageTool extends BaseTool {
         return result;
     }
 
-    private generateAnnotationSummary(annotations: ProcessedAnnotation[]): any {
+    private generateAnnotationSummary(annotations: ProcessedAnnotation[]): Record<string, unknown> {
         const summary = {
             totalAnnotations: annotations.length,
             annotationTypes: {} as Record<string, number>,

@@ -2,13 +2,13 @@
  * Scrape with Session tool - Scrape content from current page in an existing session
  */
 
-import { z } from 'zod';
-import { BaseNavigationTool } from './baseNavigationTool.js';
+import {z} from 'zod';
+import {BaseNavigationTool} from '@/tools/baseNavigationTool.js';
 
 export class ScrapeWithSessionTool extends BaseNavigationTool {
   name = 'scrape_with_session';
   description = 'Extract article content from the current page in an existing browser session';
-  
+
   inputSchema = z.object({
     sessionId: z.string().describe('Session ID of existing browser session with target page loaded'),
     extractSelectors: z.object({
@@ -20,9 +20,9 @@ export class ScrapeWithSessionTool extends BaseNavigationTool {
     }).optional().describe('Custom selectors for content extraction')
   });
 
-  async execute(args: z.infer<typeof this.inputSchema>, context: any): Promise<any> {
+    async execute(args: z.infer<typeof this.inputSchema>, context: import('@/types/index.js').NavigationToolContext): Promise<import('@/types/index.js').ToolResult> {
     const session = await this.getOrCreateSession(args, context);
-    
+
     try {
       const page = session.page;
       const customSelectors = args.extractSelectors || {};
@@ -46,9 +46,9 @@ export class ScrapeWithSessionTool extends BaseNavigationTool {
         const getMultipleText = (selector: string): string => {
           const elements = document.querySelectorAll(selector);
           return Array.from(elements)
-            .map(el => el.textContent?.trim() || '')
-            .filter(text => text.length > 0)
-            .join('\n\n');
+              .map(el => el.textContent?.trim() || '')
+              .filter(text => text.length > 0)
+              .join('\n\n');
         };
 
         return {
@@ -65,7 +65,7 @@ export class ScrapeWithSessionTool extends BaseNavigationTool {
         // Remove script and style elements
         const scripts = document.querySelectorAll('script, style');
         scripts.forEach(el => el.remove());
-        
+
         return document.body?.innerText || '';
       });
 
@@ -106,14 +106,14 @@ export class ScrapeWithSessionTool extends BaseNavigationTool {
         contentLength: extracted.content.length,
         score: 0
       };
-      
-      contentQuality.score = 
+
+        contentQuality.score =
         (contentQuality.hasTitle ? 25 : 0) +
         (contentQuality.hasContent ? 50 : 0) +
         (contentQuality.hasAuthor ? 15 : 0) +
         (contentQuality.hasDate ? 10 : 0);
 
-      return this.createResult({
+        const resultData = {
         success: true,
         sessionId: session.id,
         url: page.url(),
@@ -122,13 +122,36 @@ export class ScrapeWithSessionTool extends BaseNavigationTool {
         fullText: fullText.substring(0, 5000), // Limit full text
         contentQuality,
         timestamp: new Date().toISOString()
-      });
+        };
 
-    } catch (error: any) {
-      return this.createError(`Content extraction failed: ${error.message}`, {
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(resultData, null, 2)
+                }
+            ]
+        };
+
+    } catch (error: unknown) {
+        const errorMessage = `Content extraction failed: ${error instanceof Error ? error.message : String(error)}`;
+        const errorData = {
+            success: false,
+            error: errorMessage,
         sessionId: session.id,
-        url: session.page.url()
-      });
+            url: session.page.url(),
+            timestamp: new Date().toISOString()
+        };
+
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(errorData, null, 2)
+                }
+            ],
+            isError: true
+        };
     }
   }
 }

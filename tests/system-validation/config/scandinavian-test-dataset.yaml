@@ -1,0 +1,57 @@
+version: "1.0.0"
+last_updated: "2025-06-12T09:00:00.000Z"
+description: "Scandinavian News Sites Test Dataset for System Validation"
+
+domains:
+  vg.no:
+    domain: "vg.no"
+    region: "scandinavian"
+    language: "no"
+    outlet_type: "major_news"
+    has_bespoke_rule: true
+    priority: 100
+    existing_urls:
+      - "https://www.vg.no/sport/i/vgzMlp/magnus-carlsen-slo-tilbake-i-hurtigsjakk-vm"
+      - "https://www.vg.no/sport/i/kwbaKa/sjakk-vm-magnus-carlsen-mot-hans-niemann-i-kvartfinale-i-skyggen-av-jukse-skandalen"
+    collection_metadata:
+      last_collection_date: "2025-06-12"
+      urls_collected: 2
+      collection_method: [ "test" ]
+      average_quality: 0.85
+
+  nrk.no:
+    domain: "nrk.no"
+    region: "scandinavian"
+    language: "no"
+    outlet_type: "public_broadcaster"
+    has_bespoke_rule: true
+    priority: 100
+    existing_urls:
+      - "https://www.nrk.no/sport/magnus-carlsen-trekker-seg-fra-vm_-gar-i-struppen-pa-sjakkforbundet-1.17185014"
+      - "https://www.nrk.no/sport/frykter-stor-sjakksplittelse-etter-magnus-carlsen-exit_-_-sjokkerende-nyheter-1.17185103"
+    collection_metadata:
+      last_collection_date: "2025-06-12"
+      urls_collected: 2
+      collection_method: [ "test" ]
+      average_quality: 0.88
+
+  dagbladet.no:
+    domain: "dagbladet.no"
+    region: "scandinavian"
+    language: "no"
+    outlet_type: "tabloid"
+    has_bespoke_rule: true
+    priority: 95
+    existing_urls:
+      - "https://www.dagbladet.no/sport/putin-presser-pa/82444432"
+    collection_metadata:
+      last_collection_date: "2025-06-12"
+      urls_collected: 1
+      collection_method: [ "test" ]
+      average_quality: 0.75
+
+regions:
+  scandinavian:
+    name: "Scandinavian"
+    language: [ "no", "sv", "da", "fi", "is" ]
+    domains: [ "vg.no", "nrk.no", "dagbladet.no" ]

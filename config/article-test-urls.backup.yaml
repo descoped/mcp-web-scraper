@@ -1,0 +1,2260 @@
+article_schema:
+  category:
+    description: Article category
+    enum:
+      - news
+      - sport
+      - politics
+      - business
+      - culture
+      - technology
+      - health
+      - science
+      - opinion
+    required: false
+    type: string
+  date_collected:
+    description: Date when URL was collected
+    format: YYYY-MM-DD
+    required: true
+    type: string
+  date_published:
+    description: Article publication date
+    format: YYYY-MM-DD
+    required: false
+    type: string
+  extraction_result:
+    properties:
+      confidence: number
+      extraction_time: integer
+      method: string
+      quality_metrics: object
+      success: boolean
+    required: false
+    type: object
+  extraction_status:
+    default: pending
+    description: Current processing status
+    enum:
+      - pending
+      - validated
+      - extracted
+      - failed
+      - skipped
+    required: true
+    type: string
+  title:
+    description: Article headline/title
+    max_length: 200
+    required: false
+    type: string
+  url:
+    description: Full article URL
+    required: true
+    type: string
+    validation: Must be valid HTTP/HTTPS URL pointing to article page
+  validation_result:
+    properties:
+      estimated_word_count: integer
+      has_paywall: boolean
+      is_accessible: boolean
+      is_article: boolean
+      quality_score: number
+    required: false
+    type: object
+collection_criteria:
+  accessibility:
+    - Publicly accessible (no hard paywalls)
+    - No login requirements for content access
+    - Recent articles (published within last 60 days)
+  article_validation:
+    - Must be genuine article page (not frontpage/category/archive)
+    - URL patterns should indicate individual content (article IDs, slugs, dates)
+    - Must contain article schema markers or semantic structure
+  content_quality:
+    - Expected content length >500 words
+    - Substantial journalistic content (not just headlines/summaries)
+    - Multiple paragraphs with coherent narrative
+  diversity:
+    - 'Mix of categories: news, sport, politics, business, culture'
+    - 'Different content types: breaking news, analysis, features'
+    - Various article lengths and complexity levels
+collection_date: '2025-01-11'
+collection_status:
+  last_updated: '2025-06-11T22:51:37.843Z'
+  total_collected: 87
+  total_validated: 87
+  validation_failed: 0
+  validation_passed: 87
+description: Article URL dataset for universal pattern coverage validation and bespoke rule training
+domains:
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: The Beach Boys-stjernen Brian Wilson er død
+        url: https://www.aftenposten.no/norge/i/o3gA6K/the-beach-boys-stjernen-brian-wilson-er-doed
+        validation_result:
+          estimated_word_count: 211
+          frontpage_risk: 0.3
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Forskerne omtaler boligfunnene som «slående» for Oslo. Det er det i hovedsak to grunner til.
+        url: https://www.aftenposten.no/oslo/i/257e9x/ny-forskning-hoeye-boligpriser-kan-true-arbeidsmarkedet-i-oslo
+        validation_result:
+          estimated_word_count: 145
+          frontpage_risk: 0.5
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Er vi kjærester nå?
+        url: >-
+          https://www.aftenposten.no/amagasinet/i/73vr9w/han-er-ikke-klar-for-aa-kalle-henne-kjaeresten-sin-hvor-lenge-skal-hun-vente
+        validation_result:
+          estimated_word_count: 186
+          frontpage_risk: 0.5
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Nekrolog: Stein Gundersen fikk ærestittelen Stor-oberst av sine medarbeidere'
+        url: https://www.aftenposten.no/nekrolog/i/Ppl3b6/nekrolog-stein-magnar-gundersen-19492025
+        validation_result:
+          estimated_word_count: 64
+          frontpage_risk: 0.5
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Nekrolog: Abdul Majid kunne hjelpe hvis livet var vanskelig'
+        url: https://www.aftenposten.no/nekrolog/i/mPlX2p/nekrolog-abdul-majid-19432025
+        validation_result:
+          estimated_word_count: 58
+          frontpage_risk: 0.5
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+    collection_metadata:
+      average_quality: 0
+      collection_method:
+        - homepage
+        - rss
+      last_collection_date: '2025-06-12T06:58:06.448Z'
+      urls_collected: 0
+    country: Norway
+    domain: aftenposten.no
+    existing_urls: [ ]
+    has_bespoke_rule: false
+    language: 'no'
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: "Jakobs ekstreme skadegrep: –⁠\_Jeg misliker det sterkt"
+        url: >-
+          https://www.vg.no/sport/i/XjkwKr/jakob-ingebrigtsen-om-varmetrening-du-faar-automatisk-litt-hoeyere-puls-litt-hoeyere-intensitet-og-du-blir-litt-ekstra-sliten?utm_source=vgfront&utm_content=hovedlopet_row4_pos2&utm_medium=dre-6849a5a1963623598c03ce6a
+        validation_result:
+          estimated_word_count: 1015
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: VG sender klubb-VM
+        url: >-
+          https://www.vg.no/sport/i/dRWdaO/klubb-vm-sendes-paa-vg-sport-i-sommer?utm_source=vgfront&utm_content=hovedlopet_row6_pos1&utm_medium=dre-6849b8713f2129d3b15f2ca5
+        validation_result:
+          estimated_word_count: 507
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Bekrefter til VG: Finanstilsynet vil granske VM-avtale'
+        url: >-
+          https://www.vg.no/sport/i/qPlLyg/bekrefter-til-vg-finanstilsynet-vil-granske-vm-avtale?utm_source=vgfront&utm_content=hovedlopet_row11_pos1&utm_medium=dre-6849a8ef3f2129d3b15a72c1
+        validation_result:
+          estimated_word_count: 1279
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: "Ingrid Syrstad Engen forlater Barcelona: –⁠\_Det har vært en drøm"
+        url: >-
+          https://www.vg.no/sport/i/zABG21/bekreftet-landslagsspiller-ingrid-syrstad-engen-forlater-barcelona?utm_source=vgfront&utm_content=hovedlopet_row13_pos1&utm_medium=dre-684994433f2129d3b1518ab6
+        validation_result:
+          estimated_word_count: 595
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'VG erfarer: Manchester City nær enighet med Rosenborg om Sverre Nypan'
+        url: >-
+          https://www.vg.no/sport/i/4B4qrg/the-athletic-manchester-city-naerme-enighet-med-rosenborg-om-sverre-nypan?utm_source=vgfront&utm_content=hovedlopet_row17_pos1&utm_medium=dre-68497eb2963623598cef7f0f
+        validation_result:
+          estimated_word_count: 570
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+    collection_metadata:
+      average_quality: 0
+      collection_method:
+        - homepage
+        - rss
+      last_collection_date: '2025-06-12T06:54:11.911Z'
+      urls_collected: 0
+    country: Norway
+    domain: vg.no
+    existing_urls: [ ]
+    has_bespoke_rule: true
+    language: 'no'
+    outlet_type: tabloid
+    region: scandinavian
+    rule_id: vg_no_articles
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Full forvirring for norsk VM-håp: – Jeg har lyst til å banne'
+        url: https://www.nrk.no/sport/full-forvirring-for-salum-kashafali_-_-jeg-har-lyst-til-a-banne-1.17450302
+        validation_result:
+          estimated_word_count: 946
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: NRK Sport – Sportsnyheter, resultater og sendeplan
+        url: https://www.nrk.no/sport/
+        validation_result:
+          estimated_word_count: 210
+          frontpage_risk: 0.7999999999999999
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: false
+            has_publish_date: true
+          quality_score: 0.7
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 1
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sportsnyheter
+        url: https://www.nrk.no/sport/sportsnyheter-1.14660227#1.17451643.1.17451643
+        validation_result:
+          estimated_word_count: 213
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Friidrett
+        url: https://www.nrk.no/sport/friidrett-1.11725440
+        validation_result:
+          estimated_word_count: 163
+          frontpage_risk: 0.6
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sendeplan
+        url: https://www.nrk.no/sport/sendeplan/
+        validation_result:
+          estimated_word_count: 400
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: false
+            has_publish_date: true
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+    country: Norway
+    domain: nrk.no
+    has_bespoke_rule: true
+    language: 'no'
+    outlet_type: public_broadcaster
+    region: scandinavian
+    rule_id: nrk_no_articles
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Vekker oppsikt: – Sjelden man opplever'
+        url: https://www.tv2.no/sport/fotball/vekker-oppsikt-sjelden-man-opplever/17782229/
+        validation_result:
+          estimated_word_count: 10
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Avslører tårevåt telefonsamtale med moren – så kom rekordbudet
+        url: >-
+          https://www.tv2.no/sport/fotball/eliteserien/avslorer-tarevat-telefonsamtale-med-moren-sa-kom-rekordbudet/17777646/
+        validation_result:
+          estimated_word_count: 10
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 5
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Pogacar-krise i Dauphiné: – Oppsiktsvekkende svakt'
+        url: https://www.tv2.no/sport/pogacar-krise-i-tempoetappen-oppsiktsvekkende-svakt/17820076/
+        validation_result:
+          estimated_word_count: 10
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'The Athletic: Manchester City nær enighet med Rosenborg om Nypan-overgang'
+        url: https://www.tv2.no/sport/the-athletic-manchester-city-naer-enighet-med-rosenborg-om-nypan-overgang/17819834/
+        validation_result:
+          estimated_word_count: 6
+          frontpage_risk: 0.2
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Krevende Tour de France-kabal: – Mye vanskeligere'
+        url: https://www.tv2.no/sport/krevende-tour-de-france-kabal-mye-vanskeligere/17816447/
+        validation_result:
+          estimated_word_count: 10
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+    country: Norway
+    domain: tv2.no
+    has_bespoke_rule: true
+    language: 'no'
+    outlet_type: commercial_broadcaster
+    region: scandinavian
+    rule_id: tv2_no_articles
+  - articles: [ ]
+    country: Norway
+    domain: dagens.no
+    has_bespoke_rule: false
+    language: 'no'
+    outlet_type: business
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: |-
+          *Nettavisen* 
+                          Sport.
+        url: https://www.nettavisen.no/sport/kritikken-hagler-etter-england-ydmykelse/s/5-95-2477610
+        validation_result:
+          estimated_word_count: 1822
+          frontpage_risk: 0.3
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: |-
+          *Nettavisen* 
+                          Sport.
+        url: https://www.nettavisen.no/sport/nrk-finanstilsynet-skal-undersoke-ski-vm/s/5-95-2478671
+        validation_result:
+          estimated_word_count: 1086
+          frontpage_risk: 0.3
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: |-
+          *Nettavisen* 
+                          Sport.
+        url: >-
+          https://www.nettavisen.no/sport/tv-2-profil-ida-moseng-sa-kamp-hjemme-hos-egil-drillo-olsen-voldsomme-utbrudd/s/5-95-2475903
+        validation_result:
+          estimated_word_count: 2192
+          frontpage_risk: 0.3
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: |-
+          *Nettavisen* 
+                          Sport.
+        url: https://www.nettavisen.no/sport/ingebrigtsen-brodrene-med-nyhet-starter-lopelag/s/5-95-2476617
+        validation_result:
+          estimated_word_count: 1455
+          frontpage_risk: 0.3
+          has_paywall: true
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: |-
+          *Nettavisen* 
+                          Sport.
+        url: https://www.nettavisen.no/sport/
+        validation_result:
+          estimated_word_count: 6
+          frontpage_risk: 0.9999999999999999
+          has_paywall: true
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.30000000000000004
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 1
+    country: Norway
+    domain: nettavisen.no
+    has_bespoke_rule: true
+    language: 'no'
+    outlet_type: online
+    region: scandinavian
+    rule_id: nettavisen_no_articles
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Kvinne (29) fikk mareritt-tur med Uber: – Jeg rev i døra og ropte «slipp meg ut!»'
+        url: https://www.document.no/2025/06/11/kvinne-29-fikk-mareritt-tur-med-uber-jeg-rev-i-dora-og-ropte-slipp-meg-ut/
+        validation_result:
+          estimated_word_count: 1027
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sunt bondevett taper for EUs laboratorie­mat
+        url: https://www.document.no/2025/06/11/sunt-bondevett-taper-for-eus-laboratoriemat/
+        validation_result:
+          estimated_word_count: 532
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Hvem kan folk stole på?
+        url: https://www.document.no/2025/06/11/hvem-kan-folk-stole-pa/
+        validation_result:
+          estimated_word_count: 92
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: I menneskets bilde – en film om Kaja Norum
+        url: https://www.document.no/2025/06/11/i-menneskets-bilde-en-film-om-kaja-norum/
+        validation_result:
+          estimated_word_count: 190
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Trump: Avtale med Kina i boks'
+        url: https://www.document.no/2025/06/11/trump-avtale-med-kina-i-boks/
+        validation_result:
+          estimated_word_count: 57
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+    country: Norway
+    domain: document.no
+    has_bespoke_rule: false
+    language: 'no'
+    outlet_type: opinion
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: politics
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Norwegian Journalist Awarded Compensation by European Court After Brutal Attack in Russia
+        url: >-
+          https://www.tnp.no/norway/politics/norwegian-journalist-awarded-compensation-by-european-court-after-brutal-attack-in-russia/
+        validation_result:
+          estimated_word_count: 1413
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Norway`s Intelligence Sharing with US Under Scrutiny as Security Concerns Mount
+        url: https://www.tnp.no/news/norways-intelligence-sharing-with-us-under-scrutiny-as-security-concerns-mount/
+        validation_result:
+          estimated_word_count: 1806
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: politics
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Norway Warns its Citizens against Traveling to the U.S. Amid Rising Immigration Concerns
+        url: >-
+          https://www.tnp.no/norway/politics/norway-warns-its-citizens-against-traveling-to-the-u-s-amid-rising-immigration-concerns/
+        validation_result:
+          estimated_word_count: 1317
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Norway government will preserve world heritage abroad, but not in Norway.
+        url: https://www.tnp.no/news/norway-government-will-preserve-world-heritage-abroad-but-not-in-norway/
+        validation_result:
+          estimated_word_count: 1161
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Ironic Oslo Ad Goes Viral
+        url: https://www.tnp.no/news/ironic-oslo-ad-goes-viral/
+        validation_result:
+          estimated_word_count: 985
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+    country: Norway
+    domain: tnp.no
+    has_bespoke_rule: false
+    language: 'no'
+    outlet_type: regional
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Debutanten fick hålla tyst om EM-beskedet: ”Har vågat drömma”'
+        url: https://www.dn.se/sport/debutanten-fick-halla-tyst-om-em-beskedet-har-vagat-dromma/
+        validation_result:
+          estimated_word_count: 866
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Johan Esk: Peter Gerhardssons sista trupp är den bästa'
+        url: https://www.dn.se/sport/johan-esk-peter-gerhardssons-sista-trupp-ar-den-basta/
+        validation_result:
+          estimated_word_count: 1477
+          frontpage_risk: 0.3
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: ”Det finns förhoppning – därför har vi tagit ut henne”
+        url: https://www.dn.se/sport/trots-skadan-rolfo-med-i-em-truppen/
+        validation_result:
+          estimated_word_count: 1026
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Jeffrey De Graaf: ”Vill vinna för både mig och Sverige”'
+        url: https://www.dn.se/sport/jeffrey-de-graaf-vill-vinna-for-bade-mig-och-sverige/
+        validation_result:
+          estimated_word_count: 1617
+          frontpage_risk: 0.3
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Flera spelare utan klubb – här är status för EM-veteranerna
+        url: https://www.dn.se/sport/flera-spelare-utan-klubb-har-ar-status-for-em-veteranerna/
+        validation_result:
+          estimated_word_count: 1597
+          frontpage_risk: 0.3
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+    country: Sweden
+    domain: dn.se
+    has_bespoke_rule: false
+    language: sv
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Prinsessan Ines doppresent från Västerbotten hålls hemlig: ”Ge henne blommor”'
+        url: >-
+          https://www.svt.se/nyheter/lokalt/vasterbotten/prinsessan-ines-doppresent-fran-vasterbotten-halls-hemlig-ge-henne-blommor
+        validation_result:
+          estimated_word_count: 594
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Vändning – 33-åring erkänner att han dräpte paret i Piteå
+        url: https://www.svt.se/nyheter/lokalt/norrbotten/vandning-33-aring-erkanner-att-han-drapte-paret-i-pitea
+        validation_result:
+          estimated_word_count: 743
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Studie visar: Svenskarna särskilt negativa till USA'
+        url: https://www.svt.se/nyheter/utrikes/studie-visar-svenskarna-sarskilt-negativa-till-usa
+        validation_result:
+          estimated_word_count: 540
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 3
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: ”Det finns en karriärväg i att vara politiker”
+        url: https://www.svt.se/nyheter/lokalt/ost/det-finns-en-karriarvag-i-att-vara-politiker
+        validation_result:
+          estimated_word_count: 220
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Göteborg skickar stödteam till Nordmakedonien efter nattklubbsbrand
+        url: https://www.svt.se/nyheter/lokalt/vast/goteborg-skickar-stodteam-till-nordmakedonien-efter-nattklubbsbrand
+        validation_result:
+          estimated_word_count: 432
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+    country: Sweden
+    domain: svt.se
+    has_bespoke_rule: false
+    language: sv
+    outlet_type: public_broadcaster
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sillybloggen fotboll
+        url: https://www.expressen.se/sport/fotboll/sillybloggen-2025--senaste-nytt--klara-overgangar-och-rykten--chatt/
+        validation_result:
+          estimated_word_count: 1103
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sport - Senaste nyheter och sport idag
+        url: https://www.expressen.se/sport/
+        validation_result:
+          estimated_word_count: 1243
+          frontpage_risk: 0.7999999999999999
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 1
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Fotboll | Nyheter, resultat och analyser
+        url: https://www.expressen.se/sport/fotboll/
+        validation_result:
+          estimated_word_count: 695
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Allsvenskan nyheter – senaste nytt om fotbollsallsvenskan
+        url: https://www.expressen.se/sport/fotboll/allsvenskan/
+        validation_result:
+          estimated_word_count: 914
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Ställ dina frågor – och få svar direkt!
+        url: https://www.expressen.se/sport/fotboll/allsvenskan/expressens-allsvenska-chattbot/
+        validation_result:
+          estimated_word_count: 221
+          frontpage_risk: 0.3
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.7
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+    country: Sweden
+    domain: expressen.se
+    has_bespoke_rule: false
+    language: sv
+    outlet_type: tabloid
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Utrikesministern efter Unrwa-bråket: ”Magdalena Andersson ljuger”'
+        url: https://www.aftonbladet.se/nyheter/a/4Bk94E/maria-malmer-stenergard-anklagar-magdalena-andersson-ljuger
+        validation_result:
+          estimated_word_count: 612
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Läkare utan gränsers tack till Aftonbladets läsare: ”Räddar liv och ger hopp”'
+        url: >-
+          https://www.aftonbladet.se/nyheter/a/3MGyRA/lakare-utan-gransers-tack-till-aftonbladets-lasare-raddar-liv-och-ger-hopp
+        validation_result:
+          estimated_word_count: 532
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Greta Thunbergs fartyg framme i Israel
+        url: https://www.aftonbladet.se/nyheter/a/gw9b31/greta-thunbergs-fartyg-framme-i-israel
+        validation_result:
+          estimated_word_count: 268
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Justin Baldoni förlorar mot Blake Lively och Ryan Reynolds
+        url: >-
+          https://www.aftonbladet.se/nojesbladet/a/o3OX6j/justin-baldoni-forlorar-tvisten-mot-blake-livley-och-ryan-reynolds
+        validation_result:
+          estimated_word_count: 492
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Greta Thunbergs båt framme i Israel
+        url: https://www.aftonbladet.se/nyheter/a/OoO4yw/greta-thunbergs-fartyg-framme-i-israel
+        validation_result:
+          estimated_word_count: 345
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 4
+    country: Sweden
+    domain: aftonbladet.se
+    has_bespoke_rule: false
+    language: sv
+    outlet_type: tabloid
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sweden set to double three-month deadline for (some) laid-off work permit holders
+        url: >-
+          https://www.thelocal.se/20250611/sweden-proposes-extending-three-month-deadline-for-laid-off-work-permit-holders
+        validation_result:
+          estimated_word_count: 555
+          frontpage_risk: 0
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Greta Thunberg back in Sweden after Israel deports her and bans her for 100 years
+        url: >-
+          https://www.thelocal.se/20250611/greta-thunberg-back-in-sweden-after-israel-deports-her-and-bans-her-for-100-years
+        validation_result:
+          estimated_word_count: 560
+          frontpage_risk: 0
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Today in Sweden: A roundup of the latest news on Wednesday'
+        url: https://www.thelocal.se/20250611/today-in-sweden-a-roundup-of-the-latest-news-on-wednesday-200
+        validation_result:
+          estimated_word_count: 816
+          frontpage_risk: 0
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: How Sweden wants to make it easier to change employers on a work permit
+        url: https://www.thelocal.se/20250611/how-sweden-wants-to-make-it-easier-to-change-employers-on-a-work-permit
+        validation_result:
+          estimated_word_count: 437
+          frontpage_risk: 0
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Indian trade minister to visit Sweden
+        url: https://www.thelocal.se/20250611/indian-trade-minister-to-visit-sweden
+        validation_result:
+          estimated_word_count: 388
+          frontpage_risk: 0
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+    country: Sweden
+    domain: thelocal.se
+    has_bespoke_rule: false
+    language: en
+    outlet_type: english_local
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Despite Tough Choices Gerhardsson Confident in Euro Squad Selections
+        url: https://swedenherald.com/article/despite-tough-choices-gerhardsson-confident-in-euro-squad-selections
+        validation_result:
+          estimated_word_count: 4234
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Beach Boys Legend Brian Wilson Dies at 82
+        url: https://swedenherald.com/article/beach-boys-legend-brian-wilson-passes-away-at-82
+        validation_result:
+          estimated_word_count: 4206
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Kyiv's Sofia Cathedral Undergoes Restoration After Russian Attack
+        url: https://swedenherald.com/article/kyivs-sofia-cathedral-undergoes-restoration-after-russian-attack
+        validation_result:
+          estimated_word_count: 4059
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Wada Urges US to Halt Planned Doping Olympics Next Year
+        url: https://swedenherald.com/article/wada-urges-us-to-halt-planned-doping-olympics-next-year
+        validation_result:
+          estimated_word_count: 4129
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Brussels and London Agree on Gibraltar Border Solution
+        url: https://swedenherald.com/article/brussels-and-london-agree-on-gibraltar-border-solution
+        validation_result:
+          estimated_word_count: 4143
+          frontpage_risk: 0.4
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: false
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 2
+    country: Sweden
+    domain: swedenherald.com
+    has_bespoke_rule: false
+    language: en
+    outlet_type: english_local
+    region: scandinavian
+    rule_id: null
+  - articles: [ ]
+    country: Denmark
+    domain: dr.dk
+    has_bespoke_rule: false
+    language: da
+    outlet_type: public_broadcaster
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Vingegaard tager tid på Pogacar i belgisk magtdemonstration
+        url: >-
+          https://politiken.dk/sport/cykling/art10445487/Vingegaard-tager-tid-p%C3%A5-Pogacar-i-belgisk-magtdemonstration
+        validation_result:
+          estimated_word_count: 15
+          frontpage_risk: 0.6
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: I al ubemærkethed har Brian Riemer foretaget sig noget, der ikke er set på landsholdet i 17 år
+        url: >-
+          https://politiken.dk/sport/fodbold/art10443542/I-al-ubem%C3%A6rkethed-har-Brian-Riemer-foretaget-sig-noget-der-ikke-er-set-p%C3%A5-landsholdet-i-17-%C3%A5r
+        validation_result:
+          estimated_word_count: 15
+          frontpage_risk: 0.6
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: De gav ham ordren om at skyyyyyde, og han kvitterede med et flot mål
+        url: >-
+          https://politiken.dk/sport/art10434372/De-gav-ham-ordren-om-at-skyyyyyde-og-han-kvitterede-med-et-flot-m%C3%A5l
+        validation_result:
+          estimated_word_count: 15
+          frontpage_risk: 0.6
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Karakterbogen: To spillere skiller sig ud i dansk storsejr'
+        url: https://politiken.dk/sport/fodbold/art10443495/To-spillere-skiller-sig-ud-i-dansk-storsejr
+        validation_result:
+          estimated_word_count: 15
+          frontpage_risk: 0.6
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Det blev en målfest, da Danmark slog Litauen 5-0
+        url: https://politiken.dk/sport/art10443138/Det-blev-en-m%C3%A5lfest-da-Danmark-slog-Litauen-5-0
+        validation_result:
+          estimated_word_count: 15
+          frontpage_risk: 0.6
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.4
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+    country: Denmark
+    domain: politiken.dk
+    has_bespoke_rule: false
+    language: da
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles: [ ]
+    country: Denmark
+    domain: bt.dk
+    has_bespoke_rule: false
+    language: da
+    outlet_type: tabloid
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Vingegaard slog Pogacar i vigtig Tour-test – men deres fælles rival var endnu stærkere
+        url: >-
+          https://jyllands-posten.dk/sport/cykling/ECE18266797/vingegaard-slog-pogacar-i-vigtig-tourtest-men-deres-faelles-rival-var-endnu-staerkere/?fp-exp=60720001&fp-alg=607200011
+        validation_result:
+          estimated_word_count: 430
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Verdens bedste streg blev hurtigt mættet
+        url: >-
+          https://jyllands-posten.dk/sport/ECE18256283/verdens-bedste-streg-blev-hurtigt-maettet/?fp-exp=60740010&fp-alg=607400101
+        validation_result:
+          estimated_word_count: 219
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 3
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sport - Nyheder, analyser, resultater og stillinger fra sportens verden
+        url: https://jyllands-posten.dk/sport/
+        validation_result:
+          estimated_word_count: 9
+          frontpage_risk: 0.9999999999999999
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: false
+            has_publish_date: true
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 1
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Eriksens mål var klasse, men det mest interessante kom fra de yngste
+        url: >-
+          https://jyllands-posten.dk/sport/fodbold/ECE18243969/eriksens-maal-var-klasse-men-det-mest-interessante-kom-fra-de-yngste/?fp-exp=60740010&fp-alg=607400101
+        validation_result:
+          estimated_word_count: 148
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: false
+            path_depth: 4
+      - category: sport
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Fodbold | Jyllands-Posten
+        url: https://jyllands-posten.dk/sport/fodbold/
+        validation_result:
+          estimated_word_count: 9
+          frontpage_risk: 0.6
+          has_paywall: false
+          is_accessible: false
+          is_article: true
+          meta_validation:
+            has_article_schema: false
+            has_headline: true
+            has_og_article: false
+            has_publish_date: true
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+    country: Denmark
+    domain: jyllands-posten.dk
+    has_bespoke_rule: false
+    language: da
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: business
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Er du rigtig klog: Hvad ved du om Esbjerg?'
+        url: https://www.berlingske.dk/business/er-du-rigtig-klog-hvad-ved-du-om-esbjerg
+        validation_result:
+          estimated_word_count: 819
+          frontpage_risk: 0.3
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: false
+            has_category_path: true
+            has_date_path: false
+            path_depth: 2
+    country: Denmark
+    domain: berlingske.dk
+    has_bespoke_rule: false
+    language: da
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles: [ ]
+    country: Finland
+    domain: hs.fi
+    has_bespoke_rule: false
+    language: fi
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles: [ ]
+    country: Finland
+    domain: yle.fi
+    has_bespoke_rule: false
+    language: fi
+    outlet_type: public_broadcaster
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Horoskooppi
+        url: https://www.iltalehti.fi/horoskooppi
+        validation_result:
+          estimated_word_count: 286
+          frontpage_risk: 0.7
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: false
+            has_category_path: false
+            has_date_path: false
+            path_depth: 1
+    country: Finland
+    domain: iltalehti.fi
+    has_bespoke_rule: false
+    language: fi
+    outlet_type: tabloid
+    region: scandinavian
+    rule_id: null
+  - articles: [ ]
+    country: Iceland
+    domain: ruv.is
+    has_bespoke_rule: false
+    language: is
+    outlet_type: public_broadcaster
+    region: scandinavian
+    rule_id: null
+  - articles: [ ]
+    country: Iceland
+    domain: visir.is
+    has_bespoke_rule: false
+    language: is
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: “There must be consequences” — Police union chair sounds alarm on officer safety
+        url: https://www.mbl.is/english/news/2025/06/11/there_must_be_consequences_police_union_chair_sound/
+        validation_result:
+          estimated_word_count: 711
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: true
+            path_depth: 6
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Investors face heavy losses as PLAY founders launch buyout bid
+        url: https://www.mbl.is/english/news/2025/06/11/investors_face_heavy_losses_as_play_founders_launch/
+        validation_result:
+          estimated_word_count: 568
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.9
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: true
+            path_depth: 6
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Trial begins in Krýsuvík murder case
+        url: https://www.mbl.is/english/news/2025/06/11/trial_begins_in_krysuvik_murder_case/
+        validation_result:
+          estimated_word_count: 229
+          frontpage_risk: 0
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.7
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: true
+            path_depth: 6
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Missing hiker found on Esja
+        url: https://www.mbl.is/english/news/2025/06/10/missing_hiker_found_on_esja/
+        validation_result:
+          estimated_word_count: 127
+          frontpage_risk: 0.2
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: true
+            path_depth: 6
+      - category: news
+        date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Men arrested after threatening police officer at his home
+        url: https://www.mbl.is/english/news/2025/06/10/men_arrested_after_threatening_police_officer_at_hi/
+        validation_result:
+          estimated_word_count: 190
+          frontpage_risk: 0.2
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: false
+          quality_score: 0.5
+          url_patterns:
+            has_article_id: true
+            has_category_path: true
+            has_date_path: true
+            path_depth: 6
+    country: Iceland
+    domain: mbl.is
+    has_bespoke_rule: false
+    language: is
+    outlet_type: newspaper
+    region: scandinavian
+    rule_id: null
+  - articles:
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Iceland’s F-Roads: What You Need to Know Before Driving into the Highlands'
+        url: >-
+          https://www.icenews.is/2025/06/02/icelands-f-roads-what-you-need-to-know-before-driving-into-the-highlands/?utm_source=rss&#038;utm_medium=rss&#038;utm_campaign=icelands-f-roads-what-you-need-to-know-before-driving-into-the-highlands
+        validation_result:
+          estimated_word_count: 647
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 1
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Denmark in Frugal Four: Country quits group to prioritise Europe'
+        url: >-
+          https://www.icenews.is/2025/06/04/denmark-in-frugal-four-country-quits-group-to-prioritise-europe/?utm_source=rss&#038;utm_medium=rss&#038;utm_campaign=denmark-in-frugal-four-country-quits-group-to-prioritise-europe
+        validation_result:
+          estimated_word_count: 206
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.7999999999999999
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: 'Tourism in Norway: Tourist tax to be introduced due to rising visitor numbers'
+        url: >-
+          https://www.icenews.is/2025/06/10/tourism-in-norway-tourist-tax-to-be-introduced-due-to-rising-visitor-numbers/?utm_source=rss&#038;utm_medium=rss&#038;utm_campaign=tourism-in-norway-tourist-tax-to-be-introduced-due-to-rising-visitor-numbers
+        validation_result:
+          estimated_word_count: 155
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Sweden to tackle overcrowded prisons by sending inmates abroad
+        url: >-
+          https://www.icenews.is/2025/06/07/sweden-to-tackle-overcrowded-prisons-by-sending-inmates-abroad/?utm_source=rss&#038;utm_medium=rss&#038;utm_campaign=sweden-to-tackle-overcrowded-prisons-by-sending-inmates-abroad
+        validation_result:
+          estimated_word_count: 134
+          frontpage_risk: 0.30000000000000004
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+      - date_collected: '2025-06-11'
+        extraction_status: validated
+        title: Partnership between Norway and UNESCO strengthened during Oslo meetings
+        url: >-
+          https://www.icenews.is/2025/05/31/partnership-between-norway-and-unesco-strengthened-during-oslo-meetings/?utm_source=rss&#038;utm_medium=rss&#038;utm_campaign=partnership-between-norway-and-unesco-strengthened-during-oslo-meetings
+        validation_result:
+          estimated_word_count: 201
+          frontpage_risk: 0.1
+          has_paywall: false
+          is_accessible: true
+          is_article: true
+          meta_validation:
+            has_article_schema: true
+            has_headline: true
+            has_og_article: true
+            has_publish_date: true
+          quality_score: 0.6
+          url_patterns:
+            has_article_id: true
+            has_category_path: false
+            has_date_path: true
+            path_depth: 4
+    country: Iceland
+    domain: icenews.is
+    has_bespoke_rule: false
+    language: en
+    outlet_type: english_local
+    region: scandinavian
+    rule_id: null
+expected_total_urls: 445
+last_updated: '2025-06-12T06:58:06.449Z'
+regions:
+  american:
+    description: US-based news networks and publications
+    expected_universal_success_rate: 0.8
+    total_domains: 28
+  european:
+    description: European English and Continental outlets
+    expected_universal_success_rate: 0.75
+    total_domains: 27
+  scandinavian:
+    description: Nordic countries with specialized language patterns
+    expected_universal_success_rate: 0.6
+    total_domains: 34
+target_articles_per_domain: 5
+testing_config:
+  batch_size: 10
+  output_formats:
+    - detailed_csv
+    - summary_json
+    - coverage_report
+    - failure_analysis
+  parallel_jobs: 5
+  retry_count: 3
+  timeout_per_url: 30000
+  validation_rules:
+    max_frontpage_risk: 0.3
+    min_content_length: 500
+    min_quality_score: 0.4
+total_domains: 89
+version: '1.0'

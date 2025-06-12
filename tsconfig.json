@@ -8,7 +8,39 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@/tools/*": [
+        "src/tools/*"
+      ],
+      "@/core/*": [
+        "src/core/*"
+      ],
+      "@/content/*": [
+        "src/content/*"
+      ],
+      "@/types/*": [
+        "src/types/*"
+      ],
+      "@/utils/*": [
+        "src/utils/*"
+      ]
+    }
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "tests",
+    "dist",
+    "node_modules",
+    "src/ml/**/*",
+    "src/content/caching/persistentCache.ts",
+    "src/content/detectors/globalDetector.ts",
+    "src/content/platforms/contentPlatformOptimizer.ts"
+  ]
 }

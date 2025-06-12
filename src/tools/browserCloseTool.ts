@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserCloseArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserCloseArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserCloseArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserCloseArgsSchema} from '@/types/index.js';
 
 export class BrowserCloseTool extends BaseTool {
     public readonly name = 'browser_close';
@@ -39,9 +39,9 @@ export class BrowserCloseTool extends BaseTool {
 
                     // Give time for any beforeunload dialogs or operations
                     await session.page.waitForTimeout(1000);
-                } catch (error) {
+                } catch (_error) {
                     // Continue with close even if beforeunload fails
-                    console.warn('beforeunload execution failed:', error);
+                    console.warn('beforeunload execution failed:', _error);
                 }
             }
 
@@ -75,7 +75,13 @@ export class BrowserCloseTool extends BaseTool {
         }
     }
 
-    private async getSessionInfo(session: any) {
+    private async getSessionInfo(session: {
+        page: import('playwright').Page;
+        created?: string;
+        lastActivity?: Date;
+        navigationHistory?: string[];
+        hasConsentHandled?: boolean
+    }) {
         try {
             const url = session.page.url();
             const title = await session.page.title().catch(() => 'Unknown');
@@ -118,7 +124,7 @@ export class BrowserCloseTool extends BaseTool {
         }
     }
 
-    private async checkForUnsavedChanges(page: any): Promise<{
+    private async checkForUnsavedChanges(page: import('playwright').Page): Promise<{
         hasUnsavedForms: boolean;
         formCount: number;
         modifiedInputs: number;
@@ -154,7 +160,7 @@ export class BrowserCloseTool extends BaseTool {
                     } else if (element.tagName === 'SELECT') {
                         const selectEl = element as HTMLSelectElement;
                         // Check if selected option differs from default
-                        Array.from(selectEl.options).forEach((option, index) => {
+                        Array.from(selectEl.options).forEach((option, _index) => {
                             if (option.selected !== option.defaultSelected) {
                                 hasUnsavedForms = true;
                             }

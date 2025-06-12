@@ -35,7 +35,7 @@ describe('Correlation ID Integration', () => {
     });
 
     it('should accept and track correlation_id through the system', async () => {
-        const url = 'https://httpbin.org/html';
+        const url = 'https://example.com';
         const testCorrelationId = 'task_085668b2-8f3d-418e'; // KYC-AMS style task ID
 
         console.log('\n🔍 Testing correlation_id functionality...');
@@ -50,7 +50,7 @@ describe('Correlation ID Integration', () => {
         const context = {
             browserPool: server.browserPool,
             config: server.config,
-            consentPatterns: server.consentHandler.getPatterns(),
+            consentPatterns: server.getConsentPatterns(),
             correlationId: testCorrelationId, // NEW: Pass correlation_id via context
             requestMetadata: {                // NEW: Additional request metadata
                 correlationId: testCorrelationId,
@@ -79,10 +79,10 @@ describe('Correlation ID Integration', () => {
 
             console.log('\n📊 Correlation Test Results:');
             console.log('============================');
-            console.log(`✅ Tool executed successfully`);
+            console.log('✅ Tool executed successfully');
             console.log(`✅ Content extracted: ${parsedResult.fullText ? 'Yes' : 'No'}`);
             console.log(`✅ Cookie consent handled: ${parsedResult.cookieConsent.success ? 'Yes' : 'No'}`);
-            console.log(`✅ Response includes correlation context`);
+            console.log('✅ Response includes correlation context');
 
             // Verify response structure is intact
             expect(parsedResult.url).toBe(url);
@@ -100,7 +100,7 @@ describe('Correlation ID Integration', () => {
     }, 30000);
 
     it('should work without correlation_id (backward compatibility)', async () => {
-        const url = 'https://httpbin.org/html';
+        const url = 'https://example.com';
 
         console.log('\n🔄 Testing backward compatibility (no correlation_id)...');
 
@@ -112,7 +112,7 @@ describe('Correlation ID Integration', () => {
         const context = {
             browserPool: server.browserPool,
             config: server.config,
-            consentPatterns: server.consentHandler.getPatterns()
+            consentPatterns: server.getConsentPatterns()
             // NOTE: No correlation_id or requestMetadata - testing backward compatibility
         };
 
@@ -154,13 +154,13 @@ describe('Correlation ID Integration', () => {
             const context = {
                 browserPool: server.browserPool,
                 config: server.config,
-                consentPatterns: server.consentHandler.getPatterns(),
+                consentPatterns: server.getConsentPatterns(),
                 correlationId,
                 requestMetadata: {correlationId}
             };
 
             const result = await tool.execute({
-                url: 'https://httpbin.org/html',
+                url: 'https://example.com',
                 correlation_id: correlationId,
                 outputFormats: ['text']
             }, context);

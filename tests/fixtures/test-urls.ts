@@ -3,11 +3,11 @@
  */
 
 export const TEST_URLS = {
-    // Safe test URLs for integration testing
-    SIMPLE_PAGE: 'https://httpbin.org/html',
-    JSON_API: 'https://httpbin.org/json',
-    STATUS_200: 'https://httpbin.org/status/200',
-    STATUS_404: 'https://httpbin.org/status/404',
+    // Safe test URLs for integration testing (using example.com - reliable and fast)
+    SIMPLE_PAGE: 'https://example.com',
+    JSON_API: 'https://jsonplaceholder.typicode.com/posts/1',
+    STATUS_200: 'https://example.com',
+    STATUS_404: 'https://example.com/404',
 
     // Real news sites for cookie consent testing (use sparingly)
     BBC: 'https://www.bbc.com',

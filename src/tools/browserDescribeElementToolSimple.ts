@@ -3,9 +3,48 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserDescribeElementArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserDescribeElementArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserDescribeElementArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserDescribeElementArgsSchema} from '@/types/index.js';
+
+interface ElementDescription {
+    basic: {
+        tagName: string;
+        id?: string;
+        className?: string;
+        text: string;
+        type?: string;
+        role?: string;
+    };
+    position: {
+        boundingBox: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        };
+        viewport: {
+            inView: boolean;
+        };
+    };
+    styles: {
+        display: string;
+        visibility: string;
+        opacity: string;
+        backgroundColor: string;
+        color: string;
+    };
+    accessibility: {
+        ariaLabel?: string;
+        tabIndex: number;
+        focusable: boolean;
+    };
+    behavior: {
+        isInteractive: boolean;
+        isFormElement: boolean;
+    };
+    humanDescription: string;
+}
 
 export class BrowserDescribeElementTool extends BaseTool {
     public readonly name = 'browser_describe_element';
@@ -47,7 +86,7 @@ export class BrowserDescribeElementTool extends BaseTool {
                         id: element.id || undefined,
                         className: element.className || undefined,
                         text: element.textContent?.trim() || '',
-                        type: (element as any).type || undefined,
+                        type: (element as HTMLInputElement).type || undefined,
                         role: element.getAttribute('role') || undefined
                     },
                     position: {
@@ -80,7 +119,7 @@ export class BrowserDescribeElementTool extends BaseTool {
                     },
                     humanDescription: `This is a ${element.tagName.toLowerCase()} element${element.textContent ? ` containing "${element.textContent.trim().substring(0, 50)}"` : ''}${element.id ? ` with ID "${element.id}"` : ''}.`
                 };
-            }, validatedArgs.selector);
+            }, validatedArgs.selector) as ElementDescription;
 
             session.lastActivity = new Date();
 

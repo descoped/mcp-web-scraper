@@ -1,0 +1,7 @@
+{
+  "lint": ["npm run lint:full"],
+  "pre-commit": ["npm run lint:full"],
+  "build": ["npm run type-check", "npm run build"],
+  "format": ["npm run lint"],
+  "check": ["npm run lint:check", "npm run type-check"]
+}

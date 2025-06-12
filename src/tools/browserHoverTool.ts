@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserHoverArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserHoverArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserHoverArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserHoverArgsSchema} from '@/types/index.js';
 
 export class BrowserHoverTool extends BaseTool {
     public readonly name = 'browser_hover';
@@ -42,11 +42,11 @@ export class BrowserHoverTool extends BaseTool {
                 throw new Error(`Element with selector '${validatedArgs.selector}' not found`);
             }
 
-            // Take screenshot before hover
-            const beforeScreenshot = await session.page.screenshot({fullPage: false});
+            // Take screenshot before hover (for debugging - not used)
+            // const beforeScreenshot = await session.page.screenshot({fullPage: false});
 
             // Perform hover action
-            const hoverOptions: any = {
+            const hoverOptions: Record<string, unknown> = {
                 force: validatedArgs.force,
                 timeout: validatedArgs.timeout || context.config.requestTimeout
             };
@@ -63,8 +63,8 @@ export class BrowserHoverTool extends BaseTool {
             // Get element information after hover
             const afterInfo = await this.getHoverElementInfo(session.page, validatedArgs.selector);
 
-            // Take screenshot after hover to capture any changes
-            const afterScreenshot = await session.page.screenshot({fullPage: false});
+            // Take screenshot after hover to capture any changes (for debugging - not used)
+            // const afterScreenshot = await session.page.screenshot({fullPage: false});
 
             // Check for newly visible elements (common hover effect)
             const newlyVisibleElements = await this.detectNewlyVisibleElements(session.page);
@@ -104,7 +104,7 @@ export class BrowserHoverTool extends BaseTool {
         }
     }
 
-    private async getHoverElementInfo(page: any, selector: string) {
+    private async getHoverElementInfo(page: import('playwright').Page, selector: string) {
         try {
             return await page.evaluate((sel: string) => {
                 const element = document.querySelector(sel);
@@ -179,7 +179,7 @@ export class BrowserHoverTool extends BaseTool {
         }
     }
 
-    private async detectNewlyVisibleElements(page: any): Promise<string[]> {
+    private async detectNewlyVisibleElements(page: import('playwright').Page): Promise<string[]> {
         try {
             return await page.evaluate(() => {
                 const allElements = document.querySelectorAll('*');
@@ -217,7 +217,11 @@ export class BrowserHoverTool extends BaseTool {
         }
     }
 
-    private async detectTooltipElements(page: any): Promise<Array<{ selector: string, text: string, position: any }>> {
+    private async detectTooltipElements(page: import('playwright').Page): Promise<Array<{
+        selector: string,
+        text: string,
+        position: Record<string, unknown>
+    }>> {
         try {
             return await page.evaluate(() => {
                 const tooltipSelectors = [
@@ -229,7 +233,7 @@ export class BrowserHoverTool extends BaseTool {
                     '.dropdown-menu:visible'
                 ];
 
-                const tooltips: Array<{ selector: string, text: string, position: any }> = [];
+                const tooltips: Array<{ selector: string, text: string, position: Record<string, unknown> }> = [];
 
                 tooltipSelectors.forEach(selector => {
                     const elements = document.querySelectorAll(selector);

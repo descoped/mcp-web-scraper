@@ -3,9 +3,30 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserFindElementArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserFindElementArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserFindElementArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserFindElementArgsSchema} from '@/types/index.js';
+
+interface ElementMatch {
+    selector: string;
+    element: {
+        tagName: string;
+        id?: string;
+        className?: string;
+        text: string;
+        ariaLabel?: string;
+    };
+    score: number;
+    reasons: string[];
+    boundingBox: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    isVisible: boolean;
+    isInteractive: boolean;
+}
 
 export class BrowserFindElementTool extends BaseTool {
     public readonly name = 'browser_find_element';
@@ -26,12 +47,12 @@ export class BrowserFindElementTool extends BaseTool {
 
         try {
             // Simple element finding implementation
-            const matches = await session.page.evaluate(({description, strategy, maxResults}: {
+            const matches = await session.page.evaluate(({description, _strategy, maxResults}: {
                 description: string,
-                strategy: string,
+                _strategy: string,
                 maxResults: number
             }) => {
-                const results: any[] = [];
+                const results: ElementMatch[] = [];
                 const elements = document.querySelectorAll('button, input, a, h1, h2, h3, h4, h5, h6, [role="button"]');
 
                 elements.forEach((element, index) => {
@@ -69,9 +90,9 @@ export class BrowserFindElementTool extends BaseTool {
                 return results.sort((a, b) => b.score - a.score);
             }, {
                 description: validatedArgs.description,
-                strategy: validatedArgs.strategy,
+                _strategy: validatedArgs.strategy,
                 maxResults: validatedArgs.maxResults
-            });
+            }) as ElementMatch[];
 
             session.lastActivity = new Date();
 

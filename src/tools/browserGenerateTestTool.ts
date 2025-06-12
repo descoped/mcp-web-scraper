@@ -4,11 +4,48 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserGenerateTestArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserGenerateTestArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserGenerateTestArgs, NavigationToolContext, PageSession, ToolResult} from '@/types/index.js';
+import {BrowserGenerateTestArgsSchema} from '@/types/index.js';
 import * as fs from 'fs';
 import * as path from 'path';
+
+interface SessionInfo {
+    sessionId: string;
+    startUrl: string;
+    currentUrl: string;
+    navigationHistory: string[];
+    hasConsentHandled: boolean;
+    pageInfo: {
+        title: string;
+        url: string;
+        forms: Array<{
+            id: string | null;
+            name: string | null;
+            action: string;
+            method: string;
+            inputCount: number;
+        }>;
+        links: Array<{
+            href: string;
+            text: string;
+            id: string | null;
+        }>;
+        buttons: Array<{
+            text: string;
+            id: string | null;
+            type: string;
+        }>;
+        inputs: Array<{
+            id: string | null;
+            name: string | null;
+            type: string;
+            placeholder: string | null;
+        }>;
+    };
+    sessionDuration: number;
+    error?: string;
+}
 
 export class BrowserGenerateTestTool extends BaseTool {
     public readonly name = 'browser_generate_playwright_test';
@@ -78,7 +115,7 @@ export class BrowserGenerateTestTool extends BaseTool {
         }
     }
 
-    private async getSessionInfo(session: any) {
+    private async getSessionInfo(session: PageSession): Promise<SessionInfo> {
         try {
             const pageInfo = await session.page.evaluate(() => {
                 return {
@@ -117,7 +154,7 @@ export class BrowserGenerateTestTool extends BaseTool {
                 navigationHistory: session.navigationHistory,
                 hasConsentHandled: session.hasConsentHandled,
                 pageInfo,
-                sessionDuration: Date.now() - new Date(session.createdAt).getTime()
+                sessionDuration: Date.now() - session.createdAt.getTime()
             };
         } catch (error) {
             return {
@@ -140,7 +177,7 @@ export class BrowserGenerateTestTool extends BaseTool {
         }
     }
 
-    private generateTestContent(sessionInfo: any, testName: string, language: string, includeAssertions: boolean): string {
+    private generateTestContent(sessionInfo: SessionInfo, testName: string, language: string, includeAssertions: boolean): string {
         switch (language) {
             case 'typescript':
                 return this.generateTypeScriptTest(sessionInfo, testName, includeAssertions);
@@ -157,7 +194,7 @@ export class BrowserGenerateTestTool extends BaseTool {
         }
     }
 
-    private generateTypeScriptTest(sessionInfo: any, testName: string, includeAssertions: boolean): string {
+    private generateTypeScriptTest(sessionInfo: SessionInfo, testName: string, includeAssertions: boolean): string {
         const testSteps = this.generateTestSteps(sessionInfo, 'typescript');
         const assertions = includeAssertions ? this.generateAssertions(sessionInfo, 'typescript') : '';
 
@@ -184,7 +221,7 @@ test('${testName}', async ({ page }) => {
 `;
     }
 
-    private generateJavaScriptTest(sessionInfo: any, testName: string, includeAssertions: boolean): string {
+    private generateJavaScriptTest(sessionInfo: SessionInfo, testName: string, includeAssertions: boolean): string {
         const testSteps = this.generateTestSteps(sessionInfo, 'javascript');
         const assertions = includeAssertions ? this.generateAssertions(sessionInfo, 'javascript') : '';
 
@@ -206,7 +243,7 @@ test('${testName}', async ({ page }) => {
 `;
     }
 
-    private generatePythonTest(sessionInfo: any, testName: string, includeAssertions: boolean): string {
+    private generatePythonTest(sessionInfo: SessionInfo, testName: string, includeAssertions: boolean): string {
         const testSteps = this.generateTestSteps(sessionInfo, 'python');
         const assertions = includeAssertions ? this.generateAssertions(sessionInfo, 'python') : '';
 
@@ -230,7 +267,7 @@ def test_${testName.toLowerCase().replace(/[^a-z0-9]/g, '_')}(page: Page):
 `;
     }
 
-    private generateJavaTest(sessionInfo: any, testName: string, includeAssertions: boolean): string {
+    private generateJavaTest(sessionInfo: SessionInfo, testName: string, includeAssertions: boolean): string {
         const className = testName.replace(/[^a-zA-Z0-9]/g, '') + 'Test';
         const testSteps = this.generateTestSteps(sessionInfo, 'java');
         const assertions = includeAssertions ? this.generateAssertions(sessionInfo, 'java') : '';
@@ -266,7 +303,7 @@ public class ${className} {
 `;
     }
 
-    private generateCSharpTest(sessionInfo: any, testName: string, includeAssertions: boolean): string {
+    private generateCSharpTest(sessionInfo: SessionInfo, testName: string, includeAssertions: boolean): string {
         const className = testName.replace(/[^a-zA-Z0-9]/g, '') + 'Test';
         const testSteps = this.generateTestSteps(sessionInfo, 'csharp');
         const assertions = includeAssertions ? this.generateAssertions(sessionInfo, 'csharp') : '';
@@ -279,7 +316,7 @@ using NUnit.Framework;
 public class ${className} : PageTest
 {
     [Test]
-    public async Task ${testName.replace(/ /g, "")}()
+    public async Task ${testName.replace(/ /g, '')}()
     {
         // Generated test based on session: ${sessionInfo.sessionId}
         // Navigation history: ${sessionInfo.navigationHistory.join(' -> ')}
@@ -297,7 +334,7 @@ public class ${className} : PageTest
 `;
     }
 
-    private generateTestSteps(sessionInfo: any, language: string): string {
+    private generateTestSteps(sessionInfo: SessionInfo, language: string): string {
         const steps: string[] = [];
 
         // Generate navigation steps
@@ -321,7 +358,7 @@ public class ${className} : PageTest
         if (sessionInfo.pageInfo.forms.length > 0) {
             steps.push('');
             steps.push('  // Form interactions (customize as needed)');
-            sessionInfo.pageInfo.forms.forEach((form: any, index: number) => {
+            sessionInfo.pageInfo.forms.forEach((form: Record<string, unknown>, index: number) => {
                 if (language === 'python') {
                     steps.push(`    # Form ${index + 1}: ${form.action || 'unknown action'}`);
                 } else {
@@ -333,7 +370,7 @@ public class ${className} : PageTest
         if (sessionInfo.pageInfo.buttons.length > 0) {
             steps.push('');
             steps.push('  // Button interactions (customize as needed)');
-            sessionInfo.pageInfo.buttons.slice(0, 3).forEach((button: any) => {
+            sessionInfo.pageInfo.buttons.slice(0, 3).forEach((button: Record<string, unknown>) => {
                 const selector = button.id ? `#${button.id}` : `text=${button.text}`;
                 if (language === 'python') {
                     steps.push(`    # page.click("${selector}")`);
@@ -350,38 +387,38 @@ public class ${className} : PageTest
         return steps.join('\n');
     }
 
-    private generateAssertions(sessionInfo: any, language: string): string {
+    private generateAssertions(sessionInfo: SessionInfo, language: string): string {
         const assertions: string[] = [];
 
         // Page title assertion
         if (sessionInfo.pageInfo.title && sessionInfo.pageInfo.title !== 'Unknown') {
             if (language === 'python') {
-                assertions.push(`    # Verify page title`);
+                assertions.push('    # Verify page title');
                 assertions.push(`    expect(page).to_have_title("${sessionInfo.pageInfo.title}")`);
             } else if (language === 'java') {
-                assertions.push(`            // Verify page title`);
+                assertions.push('            // Verify page title');
                 assertions.push(`            assertThat(page.title()).isEqualTo("${sessionInfo.pageInfo.title}");`);
             } else if (language === 'csharp') {
-                assertions.push(`        // Verify page title`);
+                assertions.push('        // Verify page title');
                 assertions.push(`        await Expect(Page).ToHaveTitleAsync("${sessionInfo.pageInfo.title}");`);
             } else {
-                assertions.push(`  // Verify page title`);
+                assertions.push('  // Verify page title');
                 assertions.push(`  await expect(page).toHaveTitle('${sessionInfo.pageInfo.title}');`);
             }
         }
 
         // URL assertion
         if (language === 'python') {
-            assertions.push(`    # Verify current URL`);
+            assertions.push('    # Verify current URL');
             assertions.push(`    expect(page).to_have_url("${sessionInfo.currentUrl}")`);
         } else if (language === 'java') {
-            assertions.push(`            // Verify current URL`);
+            assertions.push('            // Verify current URL');
             assertions.push(`            assertThat(page.url()).isEqualTo("${sessionInfo.currentUrl}");`);
         } else if (language === 'csharp') {
-            assertions.push(`        // Verify current URL`);
+            assertions.push('        // Verify current URL');
             assertions.push(`        await Expect(Page).ToHaveURLAsync("${sessionInfo.currentUrl}");`);
         } else {
-            assertions.push(`  // Verify current URL`);
+            assertions.push('  // Verify current URL');
             assertions.push(`  await expect(page).toHaveURL('${sessionInfo.currentUrl}');`);
         }
 
@@ -391,16 +428,16 @@ public class ${className} : PageTest
             const selector = button.id ? `#${button.id}` : `text=${button.text}`;
 
             if (language === 'python') {
-                assertions.push(`    # Verify button is visible`);
+                assertions.push('    # Verify button is visible');
                 assertions.push(`    expect(page.locator("${selector}")).to_be_visible()`);
             } else if (language === 'java') {
-                assertions.push(`            // Verify button is visible`);
+                assertions.push('            // Verify button is visible');
                 assertions.push(`            assertThat(page.locator("${selector}")).isVisible();`);
             } else if (language === 'csharp') {
-                assertions.push(`        // Verify button is visible`);
+                assertions.push('        // Verify button is visible');
                 assertions.push(`        await Expect(Page.Locator("${selector}")).ToBeVisibleAsync();`);
             } else {
-                assertions.push(`  // Verify button is visible`);
+                assertions.push('  // Verify button is visible');
                 assertions.push(`  await expect(page.locator('${selector}')).toBeVisible();`);
             }
         }

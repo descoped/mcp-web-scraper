@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {HistoryNavigateArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {HistoryNavigateArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {HistoryNavigateArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {HistoryNavigateArgsSchema} from '@/types/index.js';
 
 export class NavigateHistoryTool extends BaseTool {
     public readonly name = 'navigate_history';
@@ -42,7 +42,7 @@ export class NavigateHistoryTool extends BaseTool {
             }
 
             // Perform navigation
-            let navigationPromise: Promise<any>;
+            // let navigationPromise: Promise<unknown>;
 
             if (validatedArgs.direction === 'back') {
                 // Handle multiple steps back
@@ -114,7 +114,7 @@ export class NavigateHistoryTool extends BaseTool {
         }
     }
 
-    private async getHistoryInfo(page: any): Promise<{
+    private async getHistoryInfo(page: import('playwright').Page): Promise<{
         canGoBack: boolean;
         canGoForward: boolean;
         currentIndex: number;
@@ -149,7 +149,7 @@ export class NavigateHistoryTool extends BaseTool {
         }
     }
 
-    private async canNavigateBack(page: any): Promise<boolean> {
+    private async canNavigateBack(page: import('playwright').Page): Promise<boolean> {
         try {
             // Use a more reliable method to check if back navigation is possible
             const result = await page.evaluate(() => {
@@ -171,7 +171,7 @@ export class NavigateHistoryTool extends BaseTool {
         }
     }
 
-    private async canNavigateForward(page: any): Promise<boolean> {
+    private async canNavigateForward(page: import('playwright').Page): Promise<boolean> {
         try {
             // This is tricky to detect reliably in browsers
             // We'll use a test approach with timeout
@@ -201,7 +201,7 @@ export class NavigateHistoryTool extends BaseTool {
     }
 
     // Helper method to get navigation state for debugging
-    private async getNavigationState(page: any): Promise<{
+    private async getNavigationState(page: import('playwright').Page): Promise<{
         url: string;
         title: string;
         referrer: string;

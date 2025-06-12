@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserPressKeyArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserPressKeyArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserPressKeyArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserPressKeyArgsSchema} from '@/types/index.js';
 
 export class BrowserPressKeyTool extends BaseTool {
     public readonly name = 'browser_press_key';
@@ -26,7 +26,7 @@ export class BrowserPressKeyTool extends BaseTool {
         }
 
         try {
-            let targetElement;
+            let targetElement: import('playwright').Locator | import('playwright').Page;
             let beforeInfo;
 
             // If selector is provided, focus that element first
@@ -70,14 +70,14 @@ export class BrowserPressKeyTool extends BaseTool {
             const beforeTitle = await session.page.title().catch(() => 'Unknown');
 
             // Perform the key press
-            if (validatedArgs.selector) {
-                const pressOptions: any = {};
+            if (validatedArgs.selector && targetElement && 'press' in targetElement) {
+                const pressOptions: { delay?: number; noWaitAfter?: boolean; timeout?: number } = {};
                 if (validatedArgs.delay > 0) {
                     pressOptions.delay = validatedArgs.delay;
                 }
-                await targetElement.press(keySequence, pressOptions);
+                await (targetElement as import('playwright').Locator).press(keySequence, pressOptions);
             } else {
-                const pressOptions: any = {};
+                const pressOptions: { delay?: number } = {};
                 if (validatedArgs.delay > 0) {
                     pressOptions.delay = validatedArgs.delay;
                 }
@@ -181,7 +181,7 @@ export class BrowserPressKeyTool extends BaseTool {
         return keyMapping[lowerKey] || key;
     }
 
-    private async getElementInfo(page: any, selector: string) {
+    private async getElementInfo(page: import('playwright').Page, selector: string) {
         try {
             return await page.evaluate((sel: string) => {
                 const element = document.querySelector(sel);
@@ -201,13 +201,13 @@ export class BrowserPressKeyTool extends BaseTool {
                 return {
                     exists: true,
                     focused: document.activeElement === element,
-                    value: isInput ? (element as any).value : '',
+                    value: isInput ? (element as HTMLInputElement | HTMLTextAreaElement).value : '',
                     text: element.textContent || '',
                     tagName: element.tagName,
-                    type: (element as any).type || '',
-                    selectionStart: isInput ? (element as any).selectionStart : 0,
-                    selectionEnd: isInput ? (element as any).selectionEnd : 0,
-                    contentEditable: (element as any).contentEditable === 'true'
+                    type: (element as HTMLInputElement).type || '',
+                    selectionStart: isInput ? (element as HTMLInputElement | HTMLTextAreaElement).selectionStart : 0,
+                    selectionEnd: isInput ? (element as HTMLInputElement | HTMLTextAreaElement).selectionEnd : 0,
+                    contentEditable: (element as HTMLElement).contentEditable === 'true'
                 };
             }, selector);
         } catch {
@@ -222,7 +222,7 @@ export class BrowserPressKeyTool extends BaseTool {
         }
     }
 
-    private async getPageInfo(page: any) {
+    private async getPageInfo(page: import('playwright').Page) {
         try {
             return await page.evaluate(() => {
                 return {

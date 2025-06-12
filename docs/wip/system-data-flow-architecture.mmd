@@ -1,0 +1,49 @@
+graph TD
+    A[npm run validate:quick] --> B[CLI Parser]
+    B --> C[SystemValidationController]
+    C --> D[DatasetManager]
+    D --> E[Load YAML File]
+    E --> F{YAML Structure Valid?}
+    F -->|No| G[Throw Error - Fail Fast]
+    F -->|Yes| H[Parse Domains Array]
+    H --> I{domains.length > 0?}
+    I -->|No| J[Throw Error - No Domains]
+    I -->|Yes| K[Filter by Region]
+    K --> L{Region Match?}
+    L -->|No| M[Skip Domain]
+    L -->|Yes| N[Extract URLs]
+    N --> O{existing_urls.length > 0?}
+    O -->|Yes| P[Use existing_urls]
+    O -->|No| Q{articles.length > 0?}
+    Q -->|No| R[Warn - No URLs Available]
+    Q -->|Yes| S[Extract from articles array]
+    P --> T[Create DomainTarget]
+    S --> T
+    R --> T
+    T --> U[Apply max_domains_per_region Limit]
+    U --> V[MCPExtractionValidator]
+    V --> W{URLs Available?}
+    W -->|No| X[Log Warning - Skip Domain]
+    W -->|Yes| Y[Apply max_articles Limit]
+    Y --> Z[MCPTestHelpers]
+    Z --> AA[PlaywrightMCPServer]
+    AA --> BB[scrape_article_content Tool]
+    BB --> CC{Extraction Success?}
+    CC -->|Yes| DD[Quality Analysis]
+    CC -->|No| EE[Error Logging]
+    DD --> FF[ValidationResult]
+    EE --> FF
+    FF --> GG[Aggregate Results]
+    GG --> HH[Generate Report]
+    HH --> II[Display Statistics]
+    style G fill: #ffcccc
+    style J fill: #ffcccc
+    style R fill: #ffffcc
+    style X fill: #ffffcc
+    style EE fill: #ffcccc
+    style DD fill: #ccffcc
+    style FF fill: #ccccff
+    classDef errorState fill: #ffcccc, stroke: #ff0000, stroke-width: 2px
+    classDef warningState fill: #ffffcc, stroke: #ffaa00, stroke-width: 2px
+    classDef successState fill: #ccffcc, stroke: #00aa00, stroke-width: 2px
+    classDef processState fill: #ccccff, stroke: #0000ff, stroke-width: 1px

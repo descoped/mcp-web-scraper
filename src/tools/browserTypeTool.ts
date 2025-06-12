@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserTypeArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserTypeArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserTypeArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserTypeArgsSchema} from '@/types/index.js';
 
 export class BrowserTypeTool extends BaseTool {
     public readonly name = 'browser_type';
@@ -100,7 +100,7 @@ export class BrowserTypeTool extends BaseTool {
         }
     }
 
-    private async getInputElementInfo(page: any, selector: string) {
+    private async getInputElementInfo(page: import('playwright').Page, selector: string) {
         try {
             return await page.evaluate((sel: string) => {
                 const element = document.querySelector(sel) as HTMLInputElement | HTMLTextAreaElement | null;
@@ -123,25 +123,25 @@ export class BrowserTypeTool extends BaseTool {
                 const isContentEditable = element.contentEditable === 'true';
                 const isEditable = (isInput || isTextarea || isContentEditable) &&
                     !element.disabled &&
-                    !(element as any).readOnly;
+                    !(element as HTMLInputElement | HTMLTextAreaElement).readOnly;
 
                 return {
                     exists: true,
                     editable: isEditable,
                     focused: document.activeElement === element,
-                    value: isContentEditable ? element.textContent || '' : (element as any).value || '',
-                    placeholder: (element as any).placeholder || '',
-                    type: (element as any).type || element.tagName.toLowerCase(),
+                    value: isContentEditable ? element.textContent || '' : (element as HTMLInputElement | HTMLTextAreaElement).value || '',
+                    placeholder: (element as HTMLInputElement | HTMLTextAreaElement).placeholder || '',
+                    type: (element as HTMLInputElement).type || element.tagName.toLowerCase(),
                     tagName: element.tagName,
                     disabled: element.disabled,
-                    readonly: (element as any).readOnly || false,
+                    readonly: (element as HTMLInputElement | HTMLTextAreaElement).readOnly || false,
                     contentEditable: element.contentEditable,
-                    maxLength: (element as any).maxLength || -1,
-                    minLength: (element as any).minLength || -1,
-                    required: (element as any).required || false,
-                    autocomplete: (element as any).autocomplete || '',
-                    selectionStart: (element as any).selectionStart || 0,
-                    selectionEnd: (element as any).selectionEnd || 0
+                    maxLength: (element as HTMLInputElement | HTMLTextAreaElement).maxLength || -1,
+                    minLength: (element as HTMLInputElement | HTMLTextAreaElement).minLength || -1,
+                    required: (element as HTMLInputElement | HTMLTextAreaElement).required || false,
+                    autocomplete: (element as HTMLInputElement).autocomplete || '',
+                    selectionStart: (element as HTMLInputElement | HTMLTextAreaElement).selectionStart || 0,
+                    selectionEnd: (element as HTMLInputElement | HTMLTextAreaElement).selectionEnd || 0
                 };
             }, selector);
         } catch {

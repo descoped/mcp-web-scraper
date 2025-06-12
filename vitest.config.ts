@@ -1,10 +1,13 @@
 import {defineConfig} from 'vitest/config';
-import path from 'path';
+import * as path from 'path';
 
 export default defineConfig({
     test: {
         globals: true,
         environment: 'node',
+        // Enable verbose output when VERBOSE env var is set
+        reporters: process.env.VERBOSE === 'true' ? 'verbose' : 'default',
+        outputFile: process.env.VERBOSE === 'true' ? './output/test-results.txt' : undefined,
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html'],

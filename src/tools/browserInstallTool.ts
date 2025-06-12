@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserInstallArgs, ToolContext, ToolResult} from '../types/index.js';
-import {BrowserInstallArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserInstallArgs, ToolContext, ToolResult} from '@/types/index.js';
+import {BrowserInstallArgsSchema} from '@/types/index.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import {exec} from 'child_process';
@@ -19,7 +19,7 @@ export class BrowserInstallTool extends BaseTool {
     public readonly description = 'Install and manage browser installations for testing';
     public readonly inputSchema = zodToJsonSchema(BrowserInstallArgsSchema);
 
-    async execute(args: Record<string, unknown>, context: ToolContext): Promise<ToolResult> {
+    async execute(args: Record<string, unknown>, _context: ToolContext): Promise<ToolResult> {
         const validatedArgs = this.validateArgs<BrowserInstallArgs>(args, BrowserInstallArgsSchema);
 
         try {

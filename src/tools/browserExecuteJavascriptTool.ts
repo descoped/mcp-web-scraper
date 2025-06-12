@@ -4,27 +4,46 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserExecuteJavascriptArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserExecuteJavascriptArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserExecuteJavascriptArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserExecuteJavascriptArgsSchema} from '@/types/index.js';
+
+interface ScriptValidation {
+    safe: boolean;
+    warnings: string[];
+    reasons: string[];
+}
+
+
+interface ExecutionImpact {
+    performance: {
+        executionTime: number;
+        performanceRating: string;
+        resourceUsage: string;
+    };
+    sideEffects: {
+        domModifications: boolean;
+        networkActivity: boolean;
+        consoleOutput: boolean;
+        storageAccess: boolean;
+    };
+    pageState: Record<string, unknown>;
+    risks: string[];
+}
 
 interface ExecutionResult {
     success: boolean;
-    result: any;
+    result: unknown;
     type: string;
     serializable: boolean;
     executionTime: number;
-    error?: {
-        name: string;
-        message: string;
-        stack?: string;
-    };
+    error?: { name: string; message: string; stack?: string };
     warnings: string[];
     sideEffects: {
-        domModified: boolean;
         consoleOutput: string[];
         networkRequests: number;
         storageChanges: boolean;
+        domModified: boolean;
     };
 }
 
@@ -181,7 +200,7 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
         };
     }
 
-    private async getExecutionContext(page: any): Promise<ExecutionContext> {
+    private async getExecutionContext(page: import('playwright').Page): Promise<ExecutionContext> {
         try {
             return await page.evaluate(() => ({
                 type: 'page' as const,
@@ -189,7 +208,7 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
                 title: document.title,
                 readyState: document.readyState
             }));
-        } catch (error) {
+        } catch {
             return {
                 type: 'page',
                 url: 'unknown',
@@ -200,9 +219,9 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
     }
 
     private async executeJavaScript(
-        page: any,
+        page: import('playwright').Page,
         script: string,
-        args: any[],
+        args: unknown[],
         includeResult: boolean,
         timeout: number,
         context: string
@@ -226,13 +245,13 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
             page.on('request', requestHandler);
 
             // Monitor console output
-            const consoleHandler = (msg: any) => {
+            const consoleHandler = (msg: import('playwright').ConsoleMessage) => {
                 sideEffects.consoleOutput.push(`${msg.type()}: ${msg.text()}`);
             };
             page.on('console', consoleHandler);
 
-            let result: any;
-            let executionError: any = null;
+            let result: unknown;
+            let executionError: { name: string; message: string; stack?: string } | undefined;
 
             try {
                 // Create the execution function
@@ -255,11 +274,12 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
                 result = await Promise.race([executePromise, timeoutPromise]);
 
                 // Check if result indicates an error
-                if (result && typeof result === 'object' && result.__error) {
+                if (result && typeof result === 'object' && '__error' in result && result.__error) {
+                    const errorResult = result as { name?: string; message?: string; stack?: string };
                     executionError = {
-                        name: result.name,
-                        message: result.message,
-                        stack: result.stack
+                        name: errorResult.name || 'Error',
+                        message: errorResult.message || 'Unknown error',
+                        stack: errorResult.stack
                     };
                     result = undefined;
                 }
@@ -288,8 +308,8 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
             try {
                 await page.evaluate(() => {
                     // This is a simplified check - just accessing storage to see if it throws
-                    localStorage.length;
-                    sessionStorage.length;
+                    void localStorage.length;
+                    void sessionStorage.length;
                 });
                 // If we get here, storage access worked
             } catch {
@@ -352,7 +372,7 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
         }
     }
 
-    private async getDOMChecksum(page: any): Promise<string> {
+    private async getDOMChecksum(page: import('playwright').Page): Promise<string> {
         try {
             return await page.evaluate(() => {
                 // Simple DOM checksum based on element count and basic structure
@@ -375,7 +395,7 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
         }
     }
 
-    private async analyzeExecutionImpact(page: any, executionResult: ExecutionResult): Promise<any> {
+    private async analyzeExecutionImpact(page: import('playwright').Page, executionResult: ExecutionResult): Promise<ExecutionImpact> {
         try {
             const impact = {
                 performance: {
@@ -407,9 +427,19 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
             return impact;
         } catch (error) {
             return {
-                performance: {executionTime: executionResult.executionTime},
-                sideEffects: executionResult.sideEffects,
-                error: error instanceof Error ? error.message : String(error)
+                performance: {
+                    executionTime: executionResult.executionTime,
+                    performanceRating: this.getPerformanceRating(executionResult.executionTime),
+                    resourceUsage: 'unknown'
+                },
+                sideEffects: {
+                    domModifications: executionResult.sideEffects.domModified,
+                    networkActivity: executionResult.sideEffects.networkRequests > 0,
+                    consoleOutput: executionResult.sideEffects.consoleOutput.length > 0,
+                    storageAccess: executionResult.sideEffects.storageChanges
+                },
+                pageState: {},
+                risks: [error instanceof Error ? error.message : String(error)]
             };
         }
     }
@@ -450,9 +480,9 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
 
     private generateExecutionReport(
         executionResult: ExecutionResult,
-        scriptValidation: any,
-        impact: any
-    ): any {
+        scriptValidation: ScriptValidation,
+        impact: ExecutionImpact
+    ): Record<string, unknown> {
         const report = {
             summary: {
                 status: executionResult.success ? 'successful' : 'failed',
@@ -463,7 +493,7 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
             safety: {
                 validationPassed: scriptValidation.safe,
                 warningsCount: scriptValidation.warnings.length,
-                risksIdentified: impact.risks?.length || 0
+                risksIdentified: impact.risks.length
             },
             technical: {
                 resultType: executionResult.type,
@@ -479,8 +509,8 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
 
     private generateExecutionRecommendations(
         executionResult: ExecutionResult,
-        scriptValidation: any,
-        impact: any
+        scriptValidation: ScriptValidation,
+        impact: ExecutionImpact
     ): string[] {
         const recommendations: string[] = [];
 
@@ -508,7 +538,7 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
             recommendations.push('Result is not serializable - consider returning simpler data types');
         }
 
-        if (impact.risks?.length > 0) {
+        if (impact.risks.length > 0) {
             recommendations.push('Review identified risks and consider safer alternatives');
         }
 

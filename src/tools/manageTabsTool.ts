@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {TabManageArgs, ToolContext, ToolResult} from '../types/index.js';
-import {TabManageArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {TabManageArgs, ToolContext, ToolResult} from '@/types/index.js';
+import {TabManageArgsSchema} from '@/types/index.js';
 
 export class ManageTabsTool extends BaseTool {
     public readonly name = 'manage_tabs';

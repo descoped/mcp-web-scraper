@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {NavigationToolContext, NetworkMonitorArgs, ToolResult} from '../types/index.js';
-import {NetworkMonitorArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {NavigationToolContext, NetworkMonitorArgs, PageSession, ToolResult} from '@/types/index.js';
+import {NetworkMonitorArgsSchema} from '@/types/index.js';
 
 interface NetworkRequest {
     url: string;
@@ -55,12 +55,12 @@ export class MonitorNetworkTool extends BaseTool {
         }
     }
 
-    private async startMonitoring(session: any, args: NetworkMonitorArgs, context: NavigationToolContext): Promise<ToolResult> {
+    private async startMonitoring(session: PageSession, args: NetworkMonitorArgs, _context: NavigationToolContext): Promise<ToolResult> {
         const requests: NetworkRequest[] = [];
         networkStorage.set(args.sessionId, requests);
 
         // Listen to request events
-        session.page.on('request', (request: any) => {
+        session.page.on('request', (request: import('playwright').Request) => {
             const shouldInclude = !args.filterUrl || request.url().includes(args.filterUrl);
 
             if (shouldInclude) {
@@ -75,7 +75,7 @@ export class MonitorNetworkTool extends BaseTool {
         });
 
         // Listen to response events
-        session.page.on('response', (response: any) => {
+        session.page.on('response', (response: import('playwright').Response) => {
             const shouldInclude = !args.filterUrl || response.url().includes(args.filterUrl);
 
             if (shouldInclude) {
@@ -116,7 +116,7 @@ export class MonitorNetworkTool extends BaseTool {
         });
     }
 
-    private async stopMonitoring(session: any, args: NetworkMonitorArgs, context: NavigationToolContext): Promise<ToolResult> {
+    private async stopMonitoring(session: PageSession, args: NetworkMonitorArgs, _context: NavigationToolContext): Promise<ToolResult> {
         // Remove all listeners
         session.page.removeAllListeners('request');
         session.page.removeAllListeners('response');
@@ -134,7 +134,7 @@ export class MonitorNetworkTool extends BaseTool {
         });
     }
 
-    private async getNetworkData(session: any, args: NetworkMonitorArgs, context: NavigationToolContext): Promise<ToolResult> {
+    private async getNetworkData(session: PageSession, args: NetworkMonitorArgs, _context: NavigationToolContext): Promise<ToolResult> {
         const requests = networkStorage.get(args.sessionId) || [];
 
         // Filter requests if filterUrl is provided

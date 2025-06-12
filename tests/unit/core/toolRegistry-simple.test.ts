@@ -5,7 +5,7 @@
 import {beforeEach, describe, expect, it} from 'vitest';
 
 // Using relative path instead of alias
-import {ToolRegistry} from '../../../src/core/toolRegistry.js';
+import {ToolRegistry} from '@/core/toolRegistry.js';
 
 describe('ToolRegistry', () => {
     let toolRegistry: ToolRegistry;

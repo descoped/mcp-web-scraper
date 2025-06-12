@@ -1,340 +1,342 @@
 /**
  * HTTP endpoints for monitoring dashboard and metrics exposition.
- * 
+ *
  * Provides comprehensive monitoring endpoints for health checks,
  * metrics, performance data, and error tracking.
  */
 
 import express from 'express';
-import type { IMonitorManager } from '../types/monitoring.js';
+import type {IMonitorManager} from '@/types/monitoring.js';
 
 /**
  * Setup monitoring endpoints on an Express app
  */
 export function setupMonitoringEndpoints(app: express.Application, monitor: IMonitorManager): void {
-  
-  /**
-   * Enhanced health endpoint with detailed component status
-   */
-  app.get('/health', (req, res) => {
-    try {
-      const healthStatus = monitor.health.getHealthStatus();
-      
-      // Set appropriate HTTP status based on health
-      let httpStatus = 200;
-      if (healthStatus.status === 'degraded') {
-        httpStatus = 200; // Still operational but with warnings
-      } else if (healthStatus.status === 'unhealthy') {
-        httpStatus = 503; // Service unavailable
-      }
 
-      res.status(httpStatus).json(healthStatus);
-    } catch (error) {
-      monitor.logger.error('Health check failed', error instanceof Error ? error : new Error(String(error)));
-      res.status(500).json({
-        status: 'unhealthy',
-        error: 'Health check failed',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+    /**
+     * Enhanced health endpoint with detailed component status
+     */
+    app.get('/health', (req, res) => {
+        try {
+            const healthStatus = monitor.health.getHealthStatus();
 
-  /**
-   * Simple health check endpoint for load balancers
-   */
-  app.get('/health/live', (req, res) => {
-    try {
-      const isHealthy = monitor.health.isHealthy();
-      res.status(isHealthy ? 200 : 503).json({
-        status: isHealthy ? 'ok' : 'unhealthy',
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      res.status(500).json({
-        status: 'error',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+            // Set appropriate HTTP status based on health
+            let httpStatus = 200;
+            if (healthStatus.status === 'degraded') {
+                httpStatus = 200; // Still operational but with warnings
+            } else if (healthStatus.status === 'unhealthy') {
+                httpStatus = 503; // Service unavailable
+            }
 
-  /**
-   * Readiness check for Kubernetes deployments
-   */
-  app.get('/health/ready', (req, res) => {
-    try {
-      const healthStatus = monitor.health.getHealthStatus();
-      const isReady = healthStatus.status !== 'unhealthy';
-      
-      res.status(isReady ? 200 : 503).json({
-        status: isReady ? 'ready' : 'not-ready',
-        components: healthStatus.components,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      res.status(500).json({
-        status: 'error',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+            res.status(httpStatus).json(healthStatus);
+        } catch (error) {
+            monitor.logger.error('Health check failed', error instanceof Error ? error : new Error(String(error)));
+            res.status(500).json({
+                status: 'unhealthy',
+                error: 'Health check failed',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 
-  /**
-   * Prometheus-style metrics endpoint
-   */
-  app.get('/metrics', (req, res) => {
-    try {
-      const metrics = monitor.metrics.getMetrics();
-      const prometheusFormat = convertToPrometheusFormat(metrics);
-      
-      res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
-      res.send(prometheusFormat);
-    } catch (error) {
-      monitor.logger.error('Metrics endpoint failed', error instanceof Error ? error : new Error(String(error)));
-      res.status(500).send('# Error generating metrics\n');
-    }
-  });
+    /**
+     * Simple health check endpoint for load balancers
+     */
+    app.get('/health/live', (req, res) => {
+        try {
+            const isHealthy = monitor.health.isHealthy();
+            res.status(isHealthy ? 200 : 503).json({
+                status: isHealthy ? 'ok' : 'unhealthy',
+                timestamp: new Date().toISOString()
+            });
+        } catch {
+            res.status(500).json({
+                status: 'error',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 
-  /**
-   * JSON metrics endpoint for custom dashboards
-   */
-  app.get('/metrics/json', (req, res) => {
-    try {
-      const windowMs = parseInt(req.query.window as string) || 300000; // 5 minutes default
-      const performanceMetrics = monitor.metrics.getPerformanceMetrics(windowMs);
-      
-      res.json({
-        performance: performanceMetrics,
-        raw_metrics: monitor.metrics.getMetrics().slice(-100), // Last 100 metrics
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      monitor.logger.error('JSON metrics endpoint failed', error instanceof Error ? error : new Error(String(error)));
-      res.status(500).json({
-        error: 'Failed to generate metrics',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+    /**
+     * Readiness check for Kubernetes deployments
+     */
+    app.get('/health/ready', (req, res) => {
+        try {
+            const healthStatus = monitor.health.getHealthStatus();
+            const isReady = healthStatus.status !== 'unhealthy';
 
-  /**
-   * Performance dashboard endpoint
-   */
-  app.get('/dashboard/performance', (req, res) => {
-    try {
-      const windowMs = parseInt(req.query.window as string) || 3600000; // 1 hour default
-      const performanceMetrics = monitor.metrics.getPerformanceMetrics(windowMs);
-      const systemStats = monitor.getSystemStats();
-      const healthStatus = monitor.health.getHealthStatus();
+            res.status(isReady ? 200 : 503).json({
+                status: isReady ? 'ready' : 'not-ready',
+                components: healthStatus.components,
+                timestamp: new Date().toISOString()
+            });
+        } catch {
+            res.status(500).json({
+                status: 'error',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 
-      const dashboard = {
-        overview: {
-          status: healthStatus.status,
-          uptime: systemStats.uptime,
-          version: systemStats.version,
-          memoryUsageMB: Math.round(systemStats.memoryUsage / 1024 / 1024)
-        },
-        performance: performanceMetrics,
-        components: healthStatus.components,
-        window: {
-          duration: windowMs,
-          start: performanceMetrics.windowStart,
-          end: performanceMetrics.windowEnd
-        },
-        timestamp: new Date().toISOString()
-      };
+    /**
+     * Prometheus-style metrics endpoint
+     */
+    app.get('/metrics', (req, res) => {
+        try {
+            const metrics = monitor.metrics.getMetrics();
+            const prometheusFormat = convertToPrometheusFormat(metrics);
 
-      res.json(dashboard);
-    } catch (error) {
-      monitor.logger.error('Performance dashboard failed', error instanceof Error ? error : new Error(String(error)));
-      res.status(500).json({
-        error: 'Failed to generate performance dashboard',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+            res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+            res.send(prometheusFormat);
+        } catch (error) {
+            monitor.logger.error('Metrics endpoint failed', error instanceof Error ? error : new Error(String(error)));
+            res.status(500).send('# Error generating metrics\n');
+        }
+    });
 
-  /**
-   * Error tracking and analysis endpoint
-   */
-  app.get('/dashboard/errors', (req, res) => {
-    try {
-      const windowMs = parseInt(req.query.window as string) || 3600000; // 1 hour default
-      const errorSummary = monitor.getErrorSummary(windowMs);
+    /**
+     * JSON metrics endpoint for custom dashboards
+     */
+    app.get('/metrics/json', (req, res) => {
+        try {
+            const windowMs = parseInt(req.query.window as string) || 300000; // 5 minutes default
+            const performanceMetrics = monitor.metrics.getPerformanceMetrics(windowMs);
 
-      res.json({
-        ...errorSummary,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      monitor.logger.error('Error dashboard failed', error instanceof Error ? error : new Error(String(error)));
-      res.status(500).json({
-        error: 'Failed to generate error dashboard',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+            res.json({
+                performance: performanceMetrics,
+                raw_metrics: monitor.metrics.getMetrics().slice(-100), // Last 100 metrics
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            monitor.logger.error('JSON metrics endpoint failed', error instanceof Error ? error : new Error(String(error)));
+            res.status(500).json({
+                error: 'Failed to generate metrics',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 
-  /**
-   * Recent logs endpoint for debugging
-   */
-  app.get('/dashboard/logs', (req, res) => {
-    try {
-      const count = parseInt(req.query.count as string) || 100;
-      const level = req.query.level as string;
-      
-      // Access recent logs from structured logger
-      const structuredLogger = monitor.logger as any;
-      const recentLogs = structuredLogger.getRecentLogs ? 
-        structuredLogger.getRecentLogs(count, level) : [];
+    /**
+     * Performance dashboard endpoint
+     */
+    app.get('/dashboard/performance', (req, res) => {
+        try {
+            const windowMs = parseInt(req.query.window as string) || 3600000; // 1 hour default
+            const performanceMetrics = monitor.metrics.getPerformanceMetrics(windowMs);
+            const systemStats = monitor.getSystemStats();
+            const healthStatus = monitor.health.getHealthStatus();
 
-      res.json({
-        logs: recentLogs,
-        count: recentLogs.length,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      monitor.logger.error('Logs endpoint failed', error instanceof Error ? error : new Error(String(error)));
-      res.status(500).json({
-        error: 'Failed to retrieve logs',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+            const dashboard = {
+                overview: {
+                    status: healthStatus.status,
+                    uptime: systemStats.uptime,
+                    version: systemStats.version,
+                    memoryUsageMB: Math.round(systemStats.memoryUsage / 1024 / 1024)
+                },
+                performance: performanceMetrics,
+                components: healthStatus.components,
+                window: {
+                    duration: windowMs,
+                    start: performanceMetrics.windowStart,
+                    end: performanceMetrics.windowEnd
+                },
+                timestamp: new Date().toISOString()
+            };
 
-  /**
-   * Configuration and system info endpoint
-   */
-  app.get('/dashboard/info', (req, res) => {
-    try {
-      const systemStats = monitor.getSystemStats();
-      const healthStatus = monitor.health.getHealthStatus();
+            res.json(dashboard);
+        } catch (error) {
+            monitor.logger.error('Performance dashboard failed', error instanceof Error ? error : new Error(String(error)));
+            res.status(500).json({
+                error: 'Failed to generate performance dashboard',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 
-      const info = {
-        system: {
-          version: systemStats.version,
-          uptime: systemStats.uptime,
-          memoryUsage: systemStats.memoryUsage,
-          platform: process.platform,
-          nodeVersion: process.version,
-          pid: process.pid
-        },
-        server: {
-          name: 'mcp-web-scraper',
-          version: '1.0.0',
-          mcpCompliant: true,
-          features: [
-            'progress_notifications',
-            'streaming_responses', 
-            'structured_logging',
-            'health_monitoring',
-            'metrics_collection'
-          ]
-        },
-        components: healthStatus.components,
-        timestamp: new Date().toISOString()
-      };
+    /**
+     * Error tracking and analysis endpoint
+     */
+    app.get('/dashboard/errors', (req, res) => {
+        try {
+            const windowMs = parseInt(req.query.window as string) || 3600000; // 1 hour default
+            const errorSummary = monitor.getErrorSummary(windowMs);
 
-      res.json(info);
-    } catch (error) {
-      monitor.logger.error('Info endpoint failed', error instanceof Error ? error : new Error(String(error)));
-      res.status(500).json({
-        error: 'Failed to retrieve system info',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+            res.json({
+                ...errorSummary,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            monitor.logger.error('Error dashboard failed', error instanceof Error ? error : new Error(String(error)));
+            res.status(500).json({
+                error: 'Failed to generate error dashboard',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
 
-  /**
-   * Simple monitoring dashboard HTML page
-   */
-  app.get('/dashboard', (req, res) => {
-    const dashboardHtml = generateDashboardHtml();
-    res.send(dashboardHtml);
-  });
+    /**
+     * Recent logs endpoint for debugging
+     */
+    app.get('/dashboard/logs', (req, res) => {
+        try {
+            const count = parseInt(req.query.count as string) || 100;
+            const level = req.query.level as string;
+
+            // Access recent logs from structured logger
+            const structuredLogger = monitor.logger as unknown as Record<string, unknown>;
+            const getRecentLogsFn = structuredLogger.getRecentLogs as ((count: number, level?: string) => unknown[]) | undefined;
+            const recentLogs = getRecentLogsFn ? getRecentLogsFn(count, level) : [];
+
+            res.json({
+                logs: recentLogs,
+                count: recentLogs.length,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            monitor.logger.error('Logs endpoint failed', error instanceof Error ? error : new Error(String(error)));
+            res.status(500).json({
+                error: 'Failed to retrieve logs',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+
+    /**
+     * Configuration and system info endpoint
+     */
+    app.get('/dashboard/info', (req, res) => {
+        try {
+            const systemStats = monitor.getSystemStats();
+            const healthStatus = monitor.health.getHealthStatus();
+
+            const info = {
+                system: {
+                    version: systemStats.version,
+                    uptime: systemStats.uptime,
+                    memoryUsage: systemStats.memoryUsage,
+                    platform: process.platform,
+                    nodeVersion: process.version,
+                    pid: process.pid
+                },
+                server: {
+                    name: 'mcp-web-scraper',
+                    version: '1.0.0',
+                    mcpCompliant: true,
+                    features: [
+                        'progress_notifications',
+                        'streaming_responses',
+                        'structured_logging',
+                        'health_monitoring',
+                        'metrics_collection'
+                    ]
+                },
+                components: healthStatus.components,
+                timestamp: new Date().toISOString()
+            };
+
+            res.json(info);
+        } catch (error) {
+            monitor.logger.error('Info endpoint failed', error instanceof Error ? error : new Error(String(error)));
+            res.status(500).json({
+                error: 'Failed to retrieve system info',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+
+    /**
+     * Simple monitoring dashboard HTML page
+     */
+    app.get('/dashboard', (req, res) => {
+        const dashboardHtml = generateDashboardHtml();
+        res.send(dashboardHtml);
+    });
 }
 
 /**
  * Convert metrics to Prometheus format
  */
-function convertToPrometheusFormat(metrics: any[]): string {
-  const promLines: string[] = [];
-  const metricGroups = new Map<string, any[]>();
+function convertToPrometheusFormat(metrics: Record<string, unknown>[]): string {
+    const promLines: string[] = [];
+    const metricGroups = new Map<string, Record<string, unknown>[]>();
 
-  // Group metrics by name
-  for (const metric of metrics) {
-    const group = metricGroups.get(metric.name) || [];
-    group.push(metric);
-    metricGroups.set(metric.name, group);
-  }
-
-  // Convert each metric group
-  for (const [name, group] of metricGroups) {
-    const latestMetric = group[group.length - 1];
-    
-    // Add help and type comments
-    promLines.push(`# HELP ${name} ${getMetricHelp(name)}`);
-    promLines.push(`# TYPE ${name} ${getPrometheusType(latestMetric.type)}`);
-    
-    // Add metric values
-    for (const metric of group) {
-      const labels = formatPrometheusLabels(metric.labels || {});
-      const timestamp = new Date(metric.timestamp).getTime();
-      promLines.push(`${name}${labels} ${metric.value} ${timestamp}`);
+    // Group metrics by name
+    for (const metric of metrics) {
+        const metricName = typeof metric.name === 'string' ? metric.name : 'unknown';
+        const group = metricGroups.get(metricName) || [];
+        group.push(metric);
+        metricGroups.set(metricName, group);
     }
-    
-    promLines.push('');
-  }
 
-  return promLines.join('\n');
+    // Convert each metric group
+    for (const [name, group] of metricGroups) {
+        const latestMetric = group[group.length - 1];
+
+        // Add help and type comments
+        promLines.push(`# HELP ${name} ${getMetricHelp(name)}`);
+        promLines.push(`# TYPE ${name} ${getPrometheusType(typeof latestMetric.type === 'string' ? latestMetric.type : 'gauge')}`);
+
+        // Add metric values
+        for (const metric of group) {
+            const labels = formatPrometheusLabels(typeof metric.labels === 'object' && metric.labels ? metric.labels as Record<string, string> : {});
+            const timestamp = typeof metric.timestamp === 'string' ? new Date(metric.timestamp).getTime() : Date.now();
+            const value = typeof metric.value === 'number' ? metric.value : 0;
+            promLines.push(`${name}${labels} ${value} ${timestamp}`);
+        }
+
+        promLines.push('');
+    }
+
+    return promLines.join('\n');
 }
 
 /**
  * Get metric help text
  */
 function getMetricHelp(metricName: string): string {
-  const helpTexts: Record<string, string> = {
-    'requests_total': 'Total number of requests processed',
-    'errors_total': 'Total number of errors encountered',
-    'response_time_ms': 'Response time in milliseconds',
-    'active_connections': 'Number of active connections',
-    'active_browsers': 'Number of active browser instances',
-    'memory_usage_bytes': 'Memory usage in bytes',
-    'uptime_seconds': 'Server uptime in seconds'
-  };
-  
-  return helpTexts[metricName] || `Metric: ${metricName}`;
+    const helpTexts: Record<string, string> = {
+        'requests_total': 'Total number of requests processed',
+        'errors_total': 'Total number of errors encountered',
+        'response_time_ms': 'Response time in milliseconds',
+        'active_connections': 'Number of active connections',
+        'active_browsers': 'Number of active browser instances',
+        'memory_usage_bytes': 'Memory usage in bytes',
+        'uptime_seconds': 'Server uptime in seconds'
+    };
+
+    return helpTexts[metricName] || `Metric: ${metricName}`;
 }
 
 /**
  * Convert metric type to Prometheus type
  */
 function getPrometheusType(metricType: string): string {
-  const typeMap: Record<string, string> = {
-    'counter': 'counter',
-    'gauge': 'gauge',
-    'histogram': 'histogram',
-    'timer': 'histogram'
-  };
-  
-  return typeMap[metricType] || 'gauge';
+    const typeMap: Record<string, string> = {
+        'counter': 'counter',
+        'gauge': 'gauge',
+        'histogram': 'histogram',
+        'timer': 'histogram'
+    };
+
+    return typeMap[metricType] || 'gauge';
 }
 
 /**
  * Format labels for Prometheus
  */
 function formatPrometheusLabels(labels: Record<string, string>): string {
-  const labelPairs = Object.entries(labels)
-    .map(([key, value]) => `${key}="${value}"`)
-    .join(',');
-  
-  return labelPairs ? `{${labelPairs}}` : '';
+    const labelPairs = Object.entries(labels)
+        .map(([key, value]) => `${key}="${value}"`)
+        .join(',');
+
+    return labelPairs ? `{${labelPairs}}` : '';
 }
 
 /**
  * Generate simple HTML dashboard
  */
 function generateDashboardHtml(): string {
-  return `
+    return `
 <!DOCTYPE html>
 <html lang="en">
 <head>

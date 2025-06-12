@@ -35,7 +35,7 @@ describe('Output Formats Integration', () => {
     });
 
     it('should generate only text format by default', async () => {
-        const url = 'https://httpbin.org/html';
+        const url = 'https://example.com';
 
         console.log('\n🧪 Testing default output format (text only)...');
 
@@ -47,7 +47,7 @@ describe('Output Formats Integration', () => {
         const context = {
             browserPool: server.browserPool,
             config: server.config,
-            consentPatterns: server.consentHandler.getPatterns()
+            consentPatterns: server.getConsentPatterns()
         };
 
         const result = await tool.execute({url}, context);
@@ -76,7 +76,7 @@ describe('Output Formats Integration', () => {
     }, 30000);
 
     it('should generate multiple formats when requested', async () => {
-        const url = 'https://httpbin.org/html';
+        const url = 'https://example.com';
 
         console.log('\n🧪 Testing multiple output formats (text, html, markdown)...');
 
@@ -88,7 +88,7 @@ describe('Output Formats Integration', () => {
         const context = {
             browserPool: server.browserPool,
             config: server.config,
-            consentPatterns: server.consentHandler.getPatterns()
+            consentPatterns: server.getConsentPatterns()
         };
 
         const result = await tool.execute({
@@ -139,7 +139,7 @@ describe('Output Formats Integration', () => {
     }, 30000);
 
     it('should generate only markdown when requested', async () => {
-        const url = 'https://httpbin.org/html';
+        const url = 'https://example.com';
 
         console.log('\n🧪 Testing markdown-only output...');
 
@@ -151,7 +151,7 @@ describe('Output Formats Integration', () => {
         const context = {
             browserPool: server.browserPool,
             config: server.config,
-            consentPatterns: server.consentHandler.getPatterns()
+            consentPatterns: server.getConsentPatterns()
         };
 
         const result = await tool.execute({

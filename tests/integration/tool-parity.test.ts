@@ -5,8 +5,8 @@
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 // Using relative imports
-import {PlaywrightMCPServer} from '../../src/server.js';
-import type {ServerConfig} from '../../src/types/index.js';
+import {PlaywrightMCPServer} from '@/server.js';
+import type {ServerConfig} from '@/types/index.js';
 
 describe('Microsoft Playwright MCP Tool Parity', () => {
     let server: PlaywrightMCPServer;
@@ -189,7 +189,7 @@ describe('Microsoft Playwright MCP Tool Parity', () => {
             tools.forEach(tool => {
                 expect(tool.inputSchema, `Tool ${tool.name} missing schema`).toBeDefined();
                 expect(tool.inputSchema.type, `Tool ${tool.name} schema invalid`).toBe('object');
-                expect(tool.name, `Tool missing name`).toBeDefined();
+                expect(tool.name, 'Tool missing name').toBeDefined();
                 expect(tool.description, `Tool ${tool.name} missing description`).toBeDefined();
                 expect(tool.execute, `Tool ${tool.name} missing execute function`).toBeDefined();
             });

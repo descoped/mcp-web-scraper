@@ -1,0 +1,90 @@
+sequenceDiagram
+    participant Client as MCP Client
+    participant Server as PlaywrightMCPServer
+    participant Registry as ToolRegistry
+    participant Tool as ScrapeArticleTool
+    participant Pool as BrowserPool
+    participant Consent as ConsentHandler
+    participant Detector as HybridDetector
+    participant Cache as ExtractionCache
+    participant Quality as QualityAnalyzer
+    participant Browser as Playwright Browser
+    Note over Client: MCP Tool Call Request
+    Client ->> Server: tools/call: scrape_article_content
+    Note over Client, Server: {url, outputFormats?, correlation_id?}
+    Server ->> Registry: getTool('scrape_article_content')
+    Registry -->> Server: ScrapeArticleTool instance
+    Server ->> Tool: execute(args, context)
+    Note over Tool: Validate arguments & context
+    Tool ->> Tool: validateArguments(args)
+    alt Invalid URL
+        Tool -->> Server: Error: Invalid URL format
+        Server -->> Client: Error Response
+    end
+
+    Tool ->> Pool: getBrowser()
+    Pool ->> Browser: Launch new browser or reuse existing
+    Browser -->> Pool: Browser instance
+    Pool -->> Tool: Browser ready
+    Tool ->> Browser: newContext()
+    Browser -->> Tool: BrowserContext
+    Tool ->> Browser: newPage()
+    Browser -->> Tool: Page instance
+    Note over Tool: Cookie Consent Handling
+    Tool ->> Consent: handleConsent(page, url, domain)
+    Consent ->> Browser: page.goto(url)
+    Browser -->> Consent: Page loaded
+    Consent ->> Browser: Look for consent dialogs
+    alt Consent Dialog Found
+        Consent ->> Browser: Click accept/agree buttons
+        Browser -->> Consent: Consent handled
+        Consent -->> Tool: {success: true, method: 'auto', time: 1200ms}
+    else No Consent Dialog
+        Consent -->> Tool: {success: true, method: 'none', time: 0ms}
+    end
+
+    Note over Tool: Content Extraction Pipeline
+    Tool ->> Cache: checkCache(url)
+    alt Cache Hit
+        Cache -->> Tool: Cached extraction result
+        Tool ->> Quality: validateCachedResult(result)
+        Quality -->> Tool: Quality assessment
+    else Cache Miss
+        Tool ->> Detector: extract(page, url, domain)
+        Note over Detector: Multi-Strategy Detection
+        Detector ->> Detector: Try Bespoke Rules
+        alt Bespoke Rule Found
+            Detector ->> Browser: Extract using domain-specific selectors
+            Browser -->> Detector: Structured content
+        else Fallback to Universal
+            Detector ->> Browser: Extract using universal patterns
+            Browser -->> Detector: Generic content
+        end
+
+        Detector ->> Detector: Apply content processing rules
+        Note over Detector: Norwegian date formatting,<br/>content cleaning, metadata extraction
+        Detector -->> Tool: ExtractionResult
+        Tool ->> Quality: analyzeQuality(result)
+        Quality ->> Quality: Check completeness, word count, frontpage risk
+        Quality -->> Tool: QualityMetrics {score: 0.85, issues: []}
+        Tool ->> Cache: storeResult(url, result, quality)
+        Cache -->> Tool: Cached for future use
+    end
+
+    Note over Tool: Output Format Generation
+    Tool ->> Tool: generateOutputFormats(result, outputFormats)
+    alt Text Only (Default)
+        Tool ->> Tool: Extract clean text content
+    else Multiple Formats
+        Tool ->> Tool: Generate text + HTML + markdown
+    end
+
+    Note over Tool: Final Response Assembly
+    Tool ->> Tool: assembleResponse(extraction, consent, quality)
+    Tool ->> Pool: releaseBrowser(browser)
+    Pool ->> Browser: Close context and cleanup
+    Browser -->> Pool: Cleanup complete
+    Pool -->> Tool: Browser released
+    Tool -->> Server: ToolResult {content, metadata}
+    Server -->> Client: MCP Response
+    Note over Client, Server: Success Response Structure:<br/>{url, title, content, author, date,<br/>quality_score, extraction_time_ms,<br/>consent_handled, method_used}

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Web Scraper - Analytics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-healthy {
+            background-color: #48bb78;
+        }
+
+        .status-warning {
+            background-color: #ed8936;
+        }
+
+        .status-critical {
+            background-color: #f56565;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-success {
+            background-color: #48bb78;
+        }
+
+        .progress-warning {
+            background-color: #ed8936;
+        }
+
+        .progress-danger {
+            background-color: #f56565;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            color: #718096;
+        }
+
+        .error {
+            background-color: #fed7d7;
+            border: 1px solid #fc8181;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #5a67d8;
+        }
+
+        .suggestions-list {
+            list-style: none;
+        }
+
+        .suggestion-item {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-priority {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background-color: #fed7d7;
+            color: #c53030;
+        }
+
+        .priority-medium {
+            background-color: #fef5e7;
+            color: #dd6b20;
+        }
+
+        .priority-low {
+            background-color: #f0fff4;
+            color: #38a169;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🕷️ MCP Web Scraper</h1>
+    <p>Analytics Dashboard - Phase 4A.2</p>
+</div>
+
+<div class="container">
+    <div class="dashboard-grid">
+        <!-- System Overview -->
+        <div class="card">
+            <h3>📊 System Overview</h3>
+            <div id="system-overview" class="loading">Loading...</div>
+        </div>
+
+        <!-- Rule Performance -->
+        <div class="card">
+            <h3>🎯 Rule Performance</h3>
+            <div id="rule-performance" class="loading">Loading...</div>
+        </div>
+
+        <!-- Cache Performance -->
+        <div class="card">
+            <h3>⚡ Cache Performance</h3>
+            <div id="cache-performance" class="loading">Loading...</div>
+        </div>
+
+        <!-- Quality Metrics -->
+        <div class="card">
+            <h3>📈 Quality Metrics</h3>
+            <div id="quality-metrics" class="loading">Loading...</div>
+        </div>
+
+        <!-- Domain Performance -->
+        <div class="card">
+            <h3>🌐 Top Domains</h3>
+            <div id="domain-performance" class="loading">Loading...</div>
+        </div>
+
+        <!-- Optimization Suggestions -->
+        <div class="card">
+            <h3>💡 Optimization Suggestions</h3>
+            <div id="optimization-suggestions" class="loading">Loading...</div>
+        </div>
+    </div>
+
+    <div class="last-updated" id="last-updated">
+        Last updated: <span id="update-time">Never</span>
+        <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh</button>
+    </div>
+</div>
+
+<script>
+    // Dashboard data loading and rendering
+    let dashboardData = null;
+
+    async function loadDashboard() {
+        try {
+            const response = await fetch('/analytics/summary');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            dashboardData = await response.json();
+            renderDashboard();
+
+            document.getElementById('update-time').textContent = new Date().toLocaleString();
+        } catch (error) {
+            console.error('Failed to load dashboard:', error);
+            showError('Failed to load analytics data: ' + error.message);
+        }
+    }
+
+    function renderDashboard() {
+        if (!dashboardData) return;
+
+        const summary = dashboardData.analytics_summary;
+        const status = dashboardData.dashboard_status;
+
+        // System Overview
+        renderSystemOverview(summary.summary, status);
+
+        // Rule Performance
+        renderRulePerformance(summary.rule_performance);
+
+        // Cache Performance
+        renderCachePerformance(summary.cache_performance);
+
+        // Quality Metrics
+        renderQualityMetrics(summary.quality_trends);
+
+        // Domain Performance
+        renderDomainPerformance(summary.domain_performance);
+
+        // Optimization Suggestions
+        renderOptimizationSuggestions(summary.optimization_suggestions);
+    }
+
+    function renderSystemOverview(summary, status) {
+        const container = document.getElementById('system-overview');
+        const healthStatus = status.overall_health;
+        const statusClass = healthStatus === 'healthy' ? 'status-healthy' :
+            healthStatus === 'warning' ? 'status-warning' : 'status-critical';
+
+        container.innerHTML = `
+                <div class="metric">
+                    <span>System Health</span>
+                    <span class="metric-value">
+                        <span class="status-indicator ${statusClass}"></span>
+                        ${healthStatus.charAt(0).toUpperCase() + healthStatus.slice(1)}
+                    </span>
+                </div>
+                <div class="metric">
+                    <span>Total Extractions</span>
+                    <span class="metric-value">${summary.total_extractions.toLocaleString()}</span>
+                </div>
+                <div class="metric">
+                    <span>Success Rate</span>
+                    <span class="metric-value">${(summary.overall_success_rate * 100).toFixed(1)}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill ${getProgressClass(summary.overall_success_rate)}" 
+                         style="width: ${summary.overall_success_rate * 100}%"></div>
+                </div>
+                <div class="metric">
+                    <span>Domains Monitored</span>
+                    <span class="metric-value">${summary.unique_domains}</span>
+                </div>
+                <div class="metric">
+                    <span>Active Rules</span>
+                    <span class="metric-value">${summary.active_bespoke_rules}</span>
+                </div>
+            `;
+    }
+
+    function renderRulePerformance(rules) {
+        const container = document.getElementById('rule-performance');
+        const topRules = rules.slice(0, 5);
+
+        if (topRules.length === 0) {
+            container.innerHTML = '<p>No rule data available</p>';
+            return;
+        }
+
+        container.innerHTML = topRules.map(rule => `
+                <div class="metric">
+                    <span>${rule.rule_name || rule.rule_id}</span>
+                    <span class="metric-value">${(rule.success_rate * 100).toFixed(1)}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill ${getProgressClass(rule.success_rate)}" 
+                         style="width: ${rule.success_rate * 100}%"></div>
+                </div>
+            `).join('');
+    }
+
+    function renderCachePerformance(cache) {
+        const container = document.getElementById('cache-performance');
+
+        container.innerHTML = `
+                <div class="metric">
+                    <span>Hit Rate</span>
+                    <span class="metric-value">${(cache.hit_rate * 100).toFixed(1)}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill ${getProgressClass(cache.hit_rate)}" 
+                         style="width: ${cache.hit_rate * 100}%"></div>
+                </div>
+                <div class="metric">
+                    <span>Total Entries</span>
+                    <span class="metric-value">${cache.total_entries.toLocaleString()}</span>
+                </div>
+                <div class="metric">
+                    <span>Size</span>
+                    <span class="metric-value">${cache.size_mb.toFixed(1)} MB</span>
+                </div>
+                <div class="metric">
+                    <span>Optimizations</span>
+                    <span class="metric-value">${cache.optimization_opportunities.length}</span>
+                </div>
+            `;
+    }
+
+    function renderQualityMetrics(quality) {
+        const container = document.getElementById('quality-metrics');
+        const trendDirection = quality.quality_trend_7d > 0.05 ? '📈' :
+            quality.quality_trend_7d < -0.05 ? '📉' : '➡️';
+
+        container.innerHTML = `
+                <div class="metric">
+                    <span>Overall Quality</span>
+                    <span class="metric-value">${(quality.overall_quality_score * 100).toFixed(1)}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill ${getProgressClass(quality.overall_quality_score)}" 
+                         style="width: ${quality.overall_quality_score * 100}%"></div>
+                </div>
+                <div class="metric">
+                    <span>7-Day Trend</span>
+                    <span class="metric-value">${trendDirection} ${(quality.quality_trend_7d * 100).toFixed(1)}%</span>
+                </div>
+                <div class="metric">
+                    <span>Frontpage Detection</span>
+                    <span class="metric-value">${(quality.frontpage_detection_rate * 100).toFixed(1)}%</span>
+                </div>
+                <div class="metric">
+                    <span>Structured Data</span>
+                    <span class="metric-value">${(quality.structured_data_rate * 100).toFixed(1)}%</span>
+                </div>
+            `;
+    }
+
+    function renderDomainPerformance(domains) {
+        const container = document.getElementById('domain-performance');
+        const topDomains = domains.slice(0, 5);
+
+        if (topDomains.length === 0) {
+            container.innerHTML = '<p>No domain data available</p>';
+            return;
+        }
+
+        container.innerHTML = topDomains.map(domain => `
+                <div class="metric">
+                    <span>${domain.domain}</span>
+                    <span class="metric-value">${(domain.success_rate * 100).toFixed(1)}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill ${getProgressClass(domain.success_rate)}" 
+                         style="width: ${domain.success_rate * 100}%"></div>
+                </div>
+            `).join('');
+    }
+
+    function renderOptimizationSuggestions(suggestions) {
+        const container = document.getElementById('optimization-suggestions');
+        const topSuggestions = suggestions.slice(0, 3);
+
+        if (topSuggestions.length === 0) {
+            container.innerHTML = '<p>No optimization suggestions available</p>';
+            return;
+        }
+
+        container.innerHTML = `
+                <ul class="suggestions-list">
+                    ${topSuggestions.map(suggestion => `
+                        <li class="suggestion-item">
+                            <div class="suggestion-title">${suggestion.title}</div>
+                            <div>
+                                <span class="suggestion-priority priority-${suggestion.priority}">
+                                    ${suggestion.priority}
+                                </span>
+                                ${suggestion.impact_estimate}
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+    }
+
+    function getProgressClass(value) {
+        if (value >= 0.7) return 'progress-success';
+        if (value >= 0.4) return 'progress-warning';
+        return 'progress-danger';
+    }
+
+    function showError(message) {
+        document.querySelectorAll('.loading').forEach(el => {
+            el.innerHTML = `<div class="error">⚠️ ${message}</div>`;
+        });
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadDashboard, 30000);
+
+    // Initial load
+    loadDashboard();
+</script>
+</body>
+</html>

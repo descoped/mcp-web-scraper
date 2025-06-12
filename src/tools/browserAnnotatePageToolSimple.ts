@@ -3,11 +3,29 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserAnnotatePageArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserAnnotatePageArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserAnnotatePageArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserAnnotatePageArgsSchema} from '@/types/index.js';
 import * as fs from 'fs';
 import * as path from 'path';
+
+interface ProcessedAnnotation {
+    type: 'highlight' | 'arrow' | 'text' | 'box' | 'circle';
+    selector?: string;
+    position?: { x: number; y: number };
+    text?: string;
+    color: string;
+    fontSize: number;
+    width?: number;
+    height?: number;
+    elementFound: boolean;
+    coordinates: {
+        x: number;
+        y: number;
+        width?: number;
+        height?: number;
+    };
+}
 
 export class BrowserAnnotatePageTool extends BaseTool {
     public readonly name = 'browser_annotate_page';
@@ -37,9 +55,13 @@ export class BrowserAnnotatePageTool extends BaseTool {
             }
 
             // Process annotations - find elements for selectors
-            const processedAnnotations = [];
+            const processedAnnotations: ProcessedAnnotation[] = [];
             for (const annotation of validatedArgs.annotations) {
-                const processed = {...annotation, elementFound: false, coordinates: {x: 0, y: 0}};
+                const processed: ProcessedAnnotation = {
+                    ...annotation,
+                    elementFound: false,
+                    coordinates: {x: 0, y: 0}
+                };
 
                 if (annotation.selector) {
                     try {
@@ -65,14 +87,19 @@ export class BrowserAnnotatePageTool extends BaseTool {
                     }
                 } else if (annotation.position) {
                     processed.elementFound = true;
-                    processed.coordinates = annotation.position;
+                    processed.coordinates = {
+                        x: annotation.position.x,
+                        y: annotation.position.y,
+                        width: annotation.width,
+                        height: annotation.height
+                    };
                 }
 
                 processedAnnotations.push(processed);
             }
 
             // Add simple annotations to page (just colored boxes for now)
-            await session.page.evaluate((annotations: any[]) => {
+            await session.page.evaluate((annotations: ProcessedAnnotation[]) => {
                 const container = document.createElement('div');
                 container.id = 'annotation-container';
                 container.style.position = 'absolute';
@@ -84,7 +111,7 @@ export class BrowserAnnotatePageTool extends BaseTool {
                 container.style.zIndex = '999999';
                 document.body.appendChild(container);
 
-                annotations.forEach((annotation, index) => {
+                annotations.forEach((annotation, _index) => {
                     if (!annotation.elementFound) return;
 
                     const element = document.createElement('div');
@@ -98,8 +125,8 @@ export class BrowserAnnotatePageTool extends BaseTool {
                     element.style.pointerEvents = 'none';
 
                     if (annotation.text) {
-                        element.textContent = annotation.text;
-                        element.style.color = annotation.color;
+                        element.textContent = annotation.text as string;
+                        element.style.color = annotation.color as string;
                         element.style.fontSize = `${annotation.fontSize}px`;
                         element.style.fontWeight = 'bold';
                         element.style.padding = '4px';

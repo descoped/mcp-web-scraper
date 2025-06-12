@@ -1,0 +1,61 @@
+sequenceDiagram
+    participant CLI as CLI (run-system-validation.ts)
+    participant Controller as SystemValidationController
+    participant DatasetMgr as DatasetManager
+    participant ExtValidator as MCPExtractionValidator
+    participant MCPHelpers as MCPTestHelpers
+    participant MCPServer as PlaywrightMCPServer
+    Note over CLI: npm run validate:quick
+    Note over CLI: --verbose --regions=scandinavian<br/>--max-domains=1 --max-articles=2<br/>--validate-only
+    CLI ->> CLI: Parse arguments & build config
+    CLI ->> Controller: new SystemValidationController(config)
+    Controller ->> DatasetMgr: new DatasetManager(dataset_file)
+    Controller ->> ExtValidator: new MCPExtractionValidator(config)
+    CLI ->> Controller: executeValidationOnly()
+    Controller ->> DatasetMgr: loadDataset()
+    DatasetMgr ->> DatasetMgr: fs.readFile(yaml file)
+    DatasetMgr ->> DatasetMgr: yaml.load(content)
+    DatasetMgr -->> Controller: YAMLDataset (26 domains)
+    Controller ->> DatasetMgr: datasetToDomainTargets(dataset, regions)
+    Note over DatasetMgr: CRITICAL FIX POINT
+    DatasetMgr ->> DatasetMgr: Validate dataset structure
+    DatasetMgr ->> DatasetMgr: Check domains is array
+    DatasetMgr ->> DatasetMgr: Filter by regions: ['scandinavian']
+
+    loop For each domain in dataset.domains
+        DatasetMgr ->> DatasetMgr: Extract URLs from articles array
+        Note over DatasetMgr: urlsToUse = domainData.articles<br/>.filter(article => article.url)<br/>.map(article => article.url)
+        DatasetMgr ->> DatasetMgr: Log: "Extracted N URLs from articles array"
+    end
+
+    DatasetMgr -->> Controller: DomainTarget[] (with populated existing_urls)
+    Controller ->> Controller: Limit to max_domains_per_region: 1
+    Controller ->> ExtValidator: validateDomainTargets(targets, max_articles=2)
+
+    loop For each domain target
+        ExtValidator ->> ExtValidator: validateDomainTarget(target, maxUrls=2)
+
+        alt existing_urls.length > 0
+            ExtValidator ->> ExtValidator: Select first 2 URLs
+            ExtValidator ->> ExtValidator: validateUrls(urlsToValidate)
+
+            loop For each URL
+                ExtValidator ->> MCPHelpers: validateUrlWithMCP(url, domain, region)
+                MCPHelpers ->> MCPServer: Create server instance
+                MCPHelpers ->> MCPServer: Execute scrape_article_content tool
+                Note over MCPServer: Actual content extraction<br/>with consent handling<br/>and quality analysis
+                MCPServer -->> MCPHelpers: Extraction result
+                MCPHelpers -->> ExtValidator: ValidationResult
+                ExtValidator ->> ExtValidator: Log success/failure
+            end
+        else
+            ExtValidator ->> ExtValidator: Log: "No URLs to validate"
+            ExtValidator -->> Controller: Empty results
+        end
+    end
+
+    ExtValidator -->> Controller: ValidationResult[]
+    Controller ->> Controller: Generate final report
+    Controller -->> CLI: SystemValidationResult
+    CLI ->> CLI: Display results & statistics
+    CLI ->> CLI: Exit

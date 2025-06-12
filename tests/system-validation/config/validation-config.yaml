@@ -1,0 +1,48 @@
+# Phase 3.6 - System Validation Configuration
+# Default configuration for MCP-native collection and validation
+
+version: "3.6.0"
+description: "System validation pipeline configuration for MCP Web Scraper"
+
+# Default operational settings
+defaults:
+  regions: [ "scandinavian" ]
+  max_domains_per_region: 10
+  max_articles_per_domain: 5
+  quality_threshold: 0.4
+  timeout_per_url: 30000
+  browser_pool_size: 4
+  enable_consent_handling: true
+  enable_rate_limiting: true
+
+# Collection configuration
+collection:
+  discovery_strategies: [ "homepage", "rss" ]
+  validate_during_collection: true
+  min_content_quality: 0.4
+  frontpage_risk_threshold: 0.6
+  max_collection_time_per_domain: 90000
+
+# Validation configuration  
+validation:
+  consent_languages: [ "no", "en", "sv", "da", "de", "fr", "es" ]
+  rate_limit_delay: 2000
+  retry_attempts: 3
+  quality_assessment: true
+  performance_benchmarking: true
+
+# Production readiness criteria
+production_readiness:
+  minimum_success_rate: 0.7
+  minimum_urls_tested: 50
+  consent_coverage_target: 0.8
+  performance_target_ms: 5000
+  dataset_completeness_target: 0.8
+
+# Output configuration
+output:
+  generate_executive_summary: true
+  generate_detailed_report: true
+  generate_csv_export: true
+  generate_production_readiness: true
+  generate_metrics_summary: true

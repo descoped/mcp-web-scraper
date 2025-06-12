@@ -1,0 +1,61 @@
+graph TD
+    A[MCP Client Request] --> B[PlaywrightMCPServer]
+    B --> C{Tool Exists?}
+    C -->|No| D[Error: Tool not found]
+    C -->|Yes| E[ScrapeArticleTool.execute]
+    E --> F[Validate Arguments]
+    F --> G{Valid URL?}
+    G -->|No| H[Error: Invalid URL]
+    G -->|Yes| I[Get Browser from Pool]
+    I --> J[Create Browser Context]
+    J --> K[Create New Page]
+    K --> L[Navigate to URL]
+    L --> M[Cookie Consent Handling]
+    M --> N{Consent Dialog Found?}
+    N -->|Yes| O[Auto-click Accept]
+    N -->|No| P[Continue without consent]
+    O --> Q[Consent Handled]
+    P --> Q
+    Q --> R[Check Extraction Cache]
+    R --> S{Cache Hit?}
+    S -->|Yes| T[Retrieve Cached Result]
+    S -->|No| U[Perform Fresh Extraction]
+    U --> V[Hybrid Content Detection]
+    V --> W{Bespoke Rule Available?}
+    W -->|Yes| X[Use Domain-Specific Rules]
+    W -->|No| Y[Use Universal Patterns]
+    X --> Z[Extract Structured Content]
+    Y --> Z
+    Z --> AA[Apply Content Processing]
+    AA --> BB[Norwegian Date Formatting]
+    BB --> CC[Content Cleaning]
+    CC --> DD[Metadata Extraction]
+    T --> EE[Quality Analysis]
+    DD --> EE
+    EE --> FF{Quality Acceptable?}
+    FF -->|No| GG[Mark as Low Quality]
+    FF -->|Yes| HH[Mark as High Quality]
+    GG --> II[Store in Cache]
+    HH --> II
+    II --> JJ[Generate Output Formats]
+    JJ --> KK{Output Format?}
+    KK -->|Text Only| LL[Extract Clean Text]
+    KK -->|Multiple| MM[Generate Text + HTML + Markdown]
+    LL --> NN[Assemble Final Response]
+    MM --> NN
+    NN --> OO[Add Metadata]
+    OO --> PP[Add Quality Metrics]
+    PP --> QQ[Add Timing Information]
+    QQ --> RR[Add Consent Status]
+    RR --> SS[Release Browser]
+    SS --> TT[Return MCP Response]
+    TT --> UU[Client Receives Result]
+    style D fill: #ff4444, color: #fff
+    style H fill: #ff4444, color: #fff
+    style GG fill: #ffaa44, color: #000
+    style HH fill: #44ff44, color: #000
+    style UU fill: #44ff44, color: #000
+    classDef errorState fill: #ff4444, stroke: #cc0000, stroke-width: 2px, color: #fff
+    classDef warnState fill: #ffaa44, stroke: #cc6600, stroke-width: 2px, color: #000
+    classDef successState fill: #44ff44, stroke: #00cc00, stroke-width: 2px, color: #000
+    classDef processState fill: #ccccff, stroke: #0000ff, stroke-width: 1px

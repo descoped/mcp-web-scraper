@@ -1,0 +1,115 @@
+graph TD
+    A[Start Content Extraction] --> B[Load Domain Rules]
+    B --> C{Bespoke Rule Exists?}
+    C -->|Yes| D[Strategy 1: Bespoke Rules]
+    C -->|No| E[Strategy 2: Universal Patterns]
+    D --> F[Load Site-Specific Selectors]
+    F --> G[Extract Title Field]
+    G --> H{Title Selector 1 Found?}
+    H -->|Yes| I[Extract Title Text]
+    H -->|No| J{Title Selector 2 Found?}
+    J -->|Yes| I
+    J -->|No| K{Title Selector N Found?}
+    K -->|Yes| I
+    K -->|No| L[Title Extraction Failed]
+    I --> M[Extract Content Field]
+    L --> M
+    M --> N{Content Selector 1 Found?}
+    N -->|Yes| O[Extract Content Text]
+    N -->|No| P{Content Selector 2 Found?}
+    P -->|Yes| O
+    P -->|No| Q{Content Selector N Found?}
+    Q -->|Yes| O
+    Q -->|No| R[Content Extraction Failed]
+    O --> S[Extract Author & Date]
+    R --> S
+    S --> T[Apply Field Processing]
+    T --> U[Assess Bespoke Quality]
+    U --> V{Quality >= 0.4?}
+    V -->|Yes| W[Bespoke Success]
+    V -->|No| X[Bespoke Failed - Fallback to Universal]
+    X --> E
+    E --> Y[Strategy 2a: Schema.org JSON-LD]
+    Y --> Z[Find script type=application/ld+json]
+    Z --> AA{JSON-LD Found?}
+    AA -->|Yes| BB[Parse Structured Data]
+    AA -->|No| CC[Strategy 2b: OpenGraph]
+    BB --> DD[Extract Article Properties]
+    DD --> EE[Assess Schema Quality]
+    EE --> FF{Schema Quality >= 0.4?}
+    FF -->|Yes| GG[Schema.org Success]
+    FF -->|No| CC
+    CC --> HH[Find og: meta tags]
+    HH --> II{OpenGraph Found?}
+    II -->|Yes| JJ[Parse OG Properties]
+    II -->|No| KK[Strategy 2c: Common Selectors]
+    JJ --> LL[Extract OG Article Data]
+    LL --> MM[Assess OG Quality]
+    MM --> NN{OG Quality >= 0.4?}
+    NN -->|Yes| OO[OpenGraph Success]
+    NN -->|No| KK
+    KK --> PP[Try Common Selector 1: article]
+    PP --> QQ{article Element Found?}
+    QQ -->|Yes| RR[Extract from article tag]
+    QQ -->|No| SS[Try Common Selector 2: .content]
+    SS --> TT{.content Found?}
+    TT -->|Yes| UU[Extract from .content]
+    TT -->|No| VV[Try Common Selector 3: .post-content]
+    VV --> WW{.post-content Found?}
+    WW -->|Yes| XX[Extract from .post-content]
+    WW -->|No| YY[Try More Common Selectors...]
+    RR --> ZZ[Assess Common Selector Quality]
+    UU --> ZZ
+    XX --> ZZ
+    ZZ --> AAA{Common Quality >= 0.4?}
+    AAA -->|Yes| BBB[Common Selector Success]
+    AAA -->|No| CCC[Strategy 2d: Heuristic Analysis]
+    YY --> CCC
+    CCC --> DDD[Analyze All Text Elements]
+    DDD --> EEE[Calculate Text Density Map]
+    EEE --> FFF[Identify High-Density Regions]
+    FFF --> GGG[Extract Main Content Area]
+    GGG --> HHH[Assess Heuristic Quality]
+    HHH --> III{Heuristic Quality >= 0.4?}
+    III -->|Yes| JJJ[Heuristic Success]
+    III -->|No| KKK[Strategy 3: Emergency Fallback]
+    KKK --> LLL[Extract Raw Page Text]
+    LLL --> MMM[Clean and Filter Text]
+    MMM --> NNN[Basic Content Processing]
+    NNN --> OOO[Emergency Result]
+    W --> PPP[Final Quality Validation]
+    GG --> PPP
+    OO --> PPP
+    BBB --> PPP
+    JJJ --> PPP
+    OOO --> PPP
+    PPP --> QQQ[Check Content Completeness]
+    QQQ --> RRR[Detect Frontpage Risk]
+    RRR --> SSS[Validate Content Length]
+    SSS --> TTT{Final Quality OK?}
+    TTT -->|Yes| UUU[Cache Result]
+    TTT -->|No| VVV[Mark as Low Quality]
+    UUU --> WWW[Return Success]
+    VVV --> XXX[Return with Warnings]
+    style D fill: #e1f5fe
+    style Y fill: #f3e5f5
+    style CC fill: #f3e5f5
+    style KK fill: #f3e5f5
+    style CCC fill: #f3e5f5
+    style KKK fill: #fff3e0
+    style W fill: #e8f5e8
+    style GG fill: #e8f5e8
+    style OO fill: #e8f5e8
+    style BBB fill: #e8f5e8
+    style JJJ fill: #e8f5e8
+    style WWW fill: #e8f5e8
+    style L fill: #ffebee
+    style R fill: #ffebee
+    style X fill: #ffebee
+    style VVV fill: #ffebee
+    style XXX fill: #ffebee
+    classDef bespokeStrategy fill: #e1f5fe, stroke: #0277bd, stroke-width: 2px
+    classDef universalStrategy fill: #f3e5f5, stroke: #7b1fa2, stroke-width: 2px
+    classDef emergencyStrategy fill: #fff3e0, stroke: #f57c00, stroke-width: 2px
+    classDef successState fill: #e8f5e8, stroke: #388e3c, stroke-width: 2px
+    classDef failureState fill: #ffebee, stroke: #d32f2f, stroke-width: 2px

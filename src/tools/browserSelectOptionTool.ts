@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserSelectOptionArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserSelectOptionArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserSelectOptionArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserSelectOptionArgsSchema} from '@/types/index.js';
 
 export class BrowserSelectOptionTool extends BaseTool {
     public readonly name = 'browser_select_option';
@@ -47,7 +47,7 @@ export class BrowserSelectOptionTool extends BaseTool {
             }
 
             // Prepare selection options
-            const selectionResults: any[] = [];
+            const selectionResults: Array<Record<string, unknown>> = [];
 
             // Select by values if provided
             if (validatedArgs.values && validatedArgs.values.length > 0) {
@@ -153,7 +153,7 @@ export class BrowserSelectOptionTool extends BaseTool {
         }
     }
 
-    private async getSelectElementInfo(page: any, selector: string) {
+    private async getSelectElementInfo(page: import('playwright').Page, selector: string) {
         try {
             return await page.evaluate((sel: string) => {
                 const element = document.querySelector(sel) as HTMLSelectElement | null;
@@ -228,7 +228,7 @@ export class BrowserSelectOptionTool extends BaseTool {
         }
     }
 
-    private async getAvailableOptions(page: any, selector: string) {
+    private async getAvailableOptions(page: import('playwright').Page, selector: string) {
         try {
             return await page.evaluate((sel: string) => {
                 const element = document.querySelector(sel) as HTMLSelectElement | null;

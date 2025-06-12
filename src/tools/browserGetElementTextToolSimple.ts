@@ -3,9 +3,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserGetElementTextArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserGetElementTextArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserGetElementTextArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserGetElementTextArgsSchema} from '@/types/index.js';
 
 export class BrowserGetElementTextTool extends BaseTool {
     public readonly name = 'browser_get_element_text';
@@ -48,7 +48,7 @@ export class BrowserGetElementTextTool extends BaseTool {
                     innerText: element.innerText || '',
                     innerHTML: element.innerHTML || '',
                     outerHTML: element.outerHTML || '',
-                    value: (element as any).value || undefined
+                    value: (element as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value || undefined
                 };
 
                 // Get primary text based on extraction method

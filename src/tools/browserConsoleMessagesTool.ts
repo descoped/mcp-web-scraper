@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserConsoleMessagesArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserConsoleMessagesArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserConsoleMessagesArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserConsoleMessagesArgsSchema} from '@/types/index.js';
 
 interface ConsoleMessage {
     type: string;
@@ -17,7 +17,7 @@ interface ConsoleMessage {
         columnNumber: number;
     };
     timestamp: string;
-    args?: any[];
+    args?: unknown[];
     level: string;
 }
 
@@ -63,12 +63,19 @@ export class BrowserConsoleMessagesTool extends BaseTool {
         }
     }
 
-    private async startConsoleMonitoring(session: any, args: BrowserConsoleMessagesArgs, context: NavigationToolContext): Promise<ToolResult> {
+    private async startConsoleMonitoring(session: {
+        id: string;
+        page: import('playwright').Page;
+        url: string;
+        navigationHistory: string[];
+        hasConsentHandled: boolean;
+        lastActivity: Date
+    }, args: BrowserConsoleMessagesArgs, _context: NavigationToolContext): Promise<ToolResult> {
         const messages: ConsoleMessage[] = [];
         consoleStorage.set(args.sessionId, messages);
 
         // Listen to console events
-        session.page.on('console', (message: any) => {
+        session.page.on('console', (message: import('playwright').ConsoleMessage) => {
             const messageLevel = message.type();
 
             // Filter by level if specified
@@ -92,7 +99,7 @@ export class BrowserConsoleMessagesTool extends BaseTool {
             try {
                 const messageArgs = message.args();
                 if (messageArgs && messageArgs.length > 0) {
-                    consoleMessage.args = messageArgs.map((arg: any) => {
+                    consoleMessage.args = messageArgs.map((arg: import('playwright').JSHandle) => {
                         try {
                             return arg.jsonValue ? arg.jsonValue() : String(arg);
                         } catch {
@@ -148,7 +155,14 @@ export class BrowserConsoleMessagesTool extends BaseTool {
         });
     }
 
-    private async stopConsoleMonitoring(session: any, args: BrowserConsoleMessagesArgs, context: NavigationToolContext): Promise<ToolResult> {
+    private async stopConsoleMonitoring(session: {
+        id: string;
+        page: import('playwright').Page;
+        url: string;
+        navigationHistory: string[];
+        hasConsentHandled: boolean;
+        lastActivity: Date
+    }, args: BrowserConsoleMessagesArgs, _context: NavigationToolContext): Promise<ToolResult> {
         // Remove all console listeners
         session.page.removeAllListeners('console');
         session.page.removeAllListeners('pageerror');
@@ -174,7 +188,14 @@ export class BrowserConsoleMessagesTool extends BaseTool {
         });
     }
 
-    private async getConsoleMessages(session: any, args: BrowserConsoleMessagesArgs, context: NavigationToolContext): Promise<ToolResult> {
+    private async getConsoleMessages(session: {
+        id: string;
+        page: import('playwright').Page;
+        url: string;
+        navigationHistory: string[];
+        hasConsentHandled: boolean;
+        lastActivity: Date
+    }, args: BrowserConsoleMessagesArgs, _context: NavigationToolContext): Promise<ToolResult> {
         const allMessages = consoleStorage.get(args.sessionId) || [];
 
         // Filter by level if specified
@@ -211,7 +232,14 @@ export class BrowserConsoleMessagesTool extends BaseTool {
         });
     }
 
-    private async clearConsoleMessages(session: any, args: BrowserConsoleMessagesArgs, context: NavigationToolContext): Promise<ToolResult> {
+    private async clearConsoleMessages(session: {
+        id: string;
+        page: import('playwright').Page;
+        url: string;
+        navigationHistory: string[];
+        hasConsentHandled: boolean;
+        lastActivity: Date
+    }, args: BrowserConsoleMessagesArgs, _context: NavigationToolContext): Promise<ToolResult> {
         const messagesBefore = consoleStorage.get(args.sessionId) || [];
         const messageCount = messagesBefore.length;
 
@@ -287,7 +315,7 @@ export class BrowserConsoleMessagesTool extends BaseTool {
     }
 
     // Clean up old console messages for memory management
-    private cleanupConsoleMessages(sessionId: string, maxAge: number = 3600000) { // 1 hour
+    private _cleanupConsoleMessages(sessionId: string, maxAge: number = 3600000) { // 1 hour
         const messages = consoleStorage.get(sessionId);
         if (!messages) return;
 

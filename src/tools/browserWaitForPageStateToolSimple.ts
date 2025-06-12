@@ -3,9 +3,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserWaitForPageStateArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserWaitForPageStateArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserWaitForPageStateArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserWaitForPageStateArgsSchema} from '@/types/index.js';
 
 export class BrowserWaitForPageStateTool extends BaseTool {
     public readonly name = 'browser_wait_for_page_state';

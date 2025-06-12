@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserFileUploadArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserFileUploadArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserFileUploadArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserFileUploadArgsSchema} from '@/types/index.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -156,7 +156,7 @@ export class BrowserFileUploadTool extends BaseTool {
         return {validFiles, invalidFiles};
     }
 
-    private async getFileInputInfo(page: any, selector: string) {
+    private async getFileInputInfo(page: import('playwright').Page, selector: string) {
         try {
             return await page.evaluate((sel: string) => {
                 const element = document.querySelector(sel) as HTMLInputElement | null;
@@ -184,7 +184,9 @@ export class BrowserFileUploadTool extends BaseTool {
                     required: element.required,
                     name: element.name,
                     id: element.id,
-                    webkitdirectory: (element as any).webkitdirectory || false,
+                    webkitdirectory: (element as HTMLInputElement & {
+                        webkitdirectory?: boolean
+                    }).webkitdirectory || false,
                     capture: element.capture || ''
                 };
             }, selector);
@@ -201,7 +203,7 @@ export class BrowserFileUploadTool extends BaseTool {
         }
     }
 
-    private async detectUploadFeedback(page: any): Promise<{
+    private async detectUploadFeedback(page: import('playwright').Page): Promise<{
         progressBars: string[];
         uploadMessages: string[];
         errorMessages: string[];

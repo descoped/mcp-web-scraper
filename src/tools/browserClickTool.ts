@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserClickArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserClickArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserClickArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserClickArgsSchema} from '@/types/index.js';
 
 export class BrowserClickTool extends BaseTool {
     public readonly name = 'browser_click';
@@ -38,11 +38,11 @@ export class BrowserClickTool extends BaseTool {
             // Get element information before click
             const elementInfo = await this.getElementInfo(session.page, validatedArgs.selector);
 
-            // Take screenshot before click for debugging
-            const beforeScreenshot = await session.page.screenshot({fullPage: false});
+            // Take screenshot before click for debugging (unused but kept for potential debugging)
+            // const _beforeScreenshot = await session.page.screenshot({fullPage: false});
 
             // Perform the click
-            const clickOptions: any = {
+            const clickOptions: Record<string, unknown> = {
                 button: validatedArgs.button,
                 clickCount: validatedArgs.clickCount,
                 force: validatedArgs.force,
@@ -67,8 +67,8 @@ export class BrowserClickTool extends BaseTool {
             // Give time for any immediate effects
             await Promise.race([navigationPromise, new Promise(resolve => setTimeout(resolve, 1000))]);
 
-            // Take screenshot after click
-            const afterScreenshot = await session.page.screenshot({fullPage: false});
+            // Take screenshot after click (unused but kept for potential debugging)
+            // const _afterScreenshot = await session.page.screenshot({fullPage: false});
 
             // Get updated element information
             const updatedElementInfo = await this.getElementInfo(session.page, validatedArgs.selector);
@@ -114,7 +114,7 @@ export class BrowserClickTool extends BaseTool {
         }
     }
 
-    private async getElementInfo(page: any, selector: string) {
+    private async getElementInfo(page: import('playwright').Page, selector: string) {
         try {
             return await page.evaluate((sel: string) => {
                 const element = document.querySelector(sel);
@@ -137,14 +137,14 @@ export class BrowserClickTool extends BaseTool {
                 // Get all attributes
                 const attributes: Record<string, string> = {};
                 for (let i = 0; i < element.attributes.length; i++) {
-                    const attr = element.attributes[i];
+                    const attr = element.attributes[i] as Attr;
                     attributes[attr.name] = attr.value;
                 }
 
                 return {
                     exists: true,
                     visible: style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0,
-                    enabled: !(element as any).disabled,
+                    enabled: !(element as HTMLInputElement | HTMLButtonElement | HTMLSelectElement).disabled,
                     text: element.textContent?.trim() || '',
                     tagName: element.tagName,
                     attributes,
@@ -177,7 +177,7 @@ export class BrowserClickTool extends BaseTool {
         }
     }
 
-    private async checkForDialogs(page: any): Promise<boolean> {
+    private async checkForDialogs(page: import('playwright').Page): Promise<boolean> {
         try {
             // Check for JavaScript dialogs (alert, confirm, prompt)
             return await page.evaluate(() => {

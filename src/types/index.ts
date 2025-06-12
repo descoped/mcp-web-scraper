@@ -12,13 +12,13 @@ import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
  * Server configuration schema
  */
 export const ServerConfigSchema = z.object({
-  name: z.string().default('mcp-web-scraper'),
-  version: z.string().default('1.0.0'),
-  port: z.number().int().min(1).max(65535).default(3001),
-  browserPoolSize: z.number().int().min(1).max(10).default(5),
-  requestTimeout: z.number().int().min(1000).max(60000).default(30000),
-  consentTimeout: z.number().int().min(1000).max(10000).default(3000),
-  enableDebugLogging: z.boolean().default(false),
+    name: z.string().default('mcp-web-scraper'),
+    version: z.string().default('1.0.0'),
+    port: z.number().int().min(1).max(65535).default(3001),
+    browserPoolSize: z.number().int().min(1).max(10).default(5),
+    requestTimeout: z.number().int().min(1000).max(60000).default(30000),
+    consentTimeout: z.number().int().min(1000).max(10000).default(3000),
+    enableDebugLogging: z.boolean().default(false),
 });
 
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;
@@ -37,18 +37,18 @@ export interface ConsentPatterns {
  * Cookie consent result
  */
 export const ConsentResultSchema = z.object({
-  success: z.boolean(),
-  reason: z.string(),
-  method: z.string().optional(),
-  verification: z.object({
     success: z.boolean(),
-    dialogsRemoved: z.boolean(),
-    consentCookiesSet: z.number(),
-    noBlockingOverlays: z.boolean(),
-    postClickDialogs: z.number(),
-    postClickOverlays: z.number(),
-  }).optional(),
-  error: z.string().optional(),
+    reason: z.string(),
+    method: z.string().optional(),
+    verification: z.object({
+        success: z.boolean(),
+        dialogsRemoved: z.boolean(),
+        consentCookiesSet: z.number(),
+        noBlockingOverlays: z.boolean(),
+        postClickDialogs: z.number(),
+        postClickOverlays: z.number(),
+    }).optional(),
+    error: z.string().optional(),
 });
 
 export type ConsentResult = z.infer<typeof ConsentResultSchema>;
@@ -98,7 +98,8 @@ export interface IMCPConnection {
   setClientVersion(version: string): void;
   cleanup(): void;
   close(): void;
-  sendNotification(notification: { method: string; params: any }): Promise<void>;
+
+    sendNotification(notification: { method: string; params: Record<string, unknown> }): Promise<void>;
   getTransport(): Transport;
 }
 
@@ -158,7 +159,7 @@ export const ToolResultSchema = z.object({
             mimeType: z.string(),
         })
     ])),
-  isError: z.boolean().optional(),
+    isError: z.boolean().optional(),
 });
 
 export type ToolResult = z.infer<typeof ToolResultSchema>;
@@ -173,17 +174,17 @@ export type OutputFormat = z.infer<typeof OutputFormatSchema>;
  * Article scraping arguments
  */
 export const ScrapeArticleArgsSchema = z.object({
-  url: z.string().url(),
+    url: z.string().url(),
     outputFormats: z.array(OutputFormatSchema).default(['text']),
     correlation_id: z.string().optional(),
-  waitForSelector: z.string().optional(),
-  extractSelectors: z.object({
-    title: z.string().optional(),
-    content: z.string().optional(),
-    author: z.string().optional(),
-    date: z.string().optional(),
-    summary: z.string().optional(),
-  }).optional(),
+    waitForSelector: z.string().optional(),
+    extractSelectors: z.object({
+        title: z.string().optional(),
+        content: z.string().optional(),
+        author: z.string().optional(),
+        date: z.string().optional(),
+        summary: z.string().optional(),
+    }).optional(),
 });
 
 export type ScrapeArticleArgs = z.infer<typeof ScrapeArticleArgsSchema>;
@@ -192,8 +193,8 @@ export type ScrapeArticleArgs = z.infer<typeof ScrapeArticleArgsSchema>;
  * Screenshot arguments
  */
 export const ScreenshotArgsSchema = z.object({
-  url: z.string().url(),
-  fullPage: z.boolean().default(false),
+    url: z.string().url(),
+    fullPage: z.boolean().default(false),
     correlation_id: z.string().optional(),
 });
 
@@ -203,43 +204,90 @@ export type ScreenshotArgs = z.infer<typeof ScreenshotArgsSchema>;
  * Cookie consent arguments
  */
 export const ConsentArgsSchema = z.object({
-  url: z.string().url(),
-  timeout: z.number().int().min(1000).max(10000).default(3000),
+    url: z.string().url(),
+    timeout: z.number().int().min(1000).max(10000).default(3000),
     correlation_id: z.string().optional(),
 });
 
 export type ConsentArgs = z.infer<typeof ConsentArgsSchema>;
 
 /**
- * Article scraping result
+ * Phase 4A.1: Enhanced analytics schemas
+ */
+export const RuleEffectivenessSchema = z.object({
+    rule_id: z.string().nullable(),
+    rule_name: z.string().nullable(),
+    rule_domain_match: z.boolean(),
+    bespoke_rule_used: z.boolean(),
+    universal_fallback: z.boolean()
+});
+
+export const QualityMetricsSchema = z.object({
+    overall_score: z.number(),
+    word_count: z.number(),
+    metadata_complete: z.boolean(),
+    has_structured_data: z.boolean(),
+    frontpage_risk: z.number(),
+    content_completeness: z.object({
+        title_present: z.boolean(),
+        content_present: z.boolean(),
+        author_present: z.boolean(),
+        date_present: z.boolean(),
+        summary_present: z.boolean()
+    })
+});
+
+export const PerformanceMetricsSchema = z.object({
+    extraction_time_ms: z.number(),
+    cache_hit: z.boolean(),
+    cache_key: z.string().nullable(),
+    retry_count: z.number()
+});
+
+export const ExtractionAnalyticsSchema = z.object({
+    method: z.string(),
+    confidence: z.number(),
+    rule_effectiveness: RuleEffectivenessSchema,
+    quality_metrics: QualityMetricsSchema,
+    performance_metrics: PerformanceMetricsSchema
+});
+
+/**
+ * Article scraping result with Phase 4A.1 enhancements
  */
 export const ArticleResultSchema = z.object({
-  url: z.string(),
-  extracted: z.object({
-    title: z.string().optional(),
-    content: z.string().optional(),
-    author: z.string().optional(),
-    date: z.string().optional(),
-    summary: z.string().optional(),
-  }),
+    url: z.string(),
+    extracted: z.object({
+        title: z.string().optional(),
+        content: z.string().optional(),
+        author: z.string().optional(),
+        date: z.string().optional(),
+        summary: z.string().optional(),
+    }),
     fullText: z.string().optional(),
     fullHtml: z.string().optional(),
     fullMarkdown: z.string().optional(),
-  timestamp: z.string(),
-  cookieConsent: ConsentResultSchema,
+    timestamp: z.string(),
+    cookieConsent: ConsentResultSchema,
+    // Phase 4A.1: Enhanced analytics (optional for backward compatibility)
+    extraction_analytics: ExtractionAnalyticsSchema.optional(),
 });
 
 export type ArticleResult = z.infer<typeof ArticleResultSchema>;
+export type RuleEffectiveness = z.infer<typeof RuleEffectivenessSchema>;
+export type QualityMetrics = z.infer<typeof QualityMetricsSchema>;
+export type PerformanceMetrics = z.infer<typeof PerformanceMetricsSchema>;
+export type ExtractionAnalytics = z.infer<typeof ExtractionAnalyticsSchema>;
 
 /**
  * Screenshot result
  */
 export const ScreenshotResultSchema = z.object({
-  success: z.boolean(),
-  url: z.string(),
-  screenshotSize: z.number(),
-  cookieConsent: ConsentResultSchema,
-  timestamp: z.string(),
+    success: z.boolean(),
+    url: z.string(),
+    screenshotSize: z.number(),
+    cookieConsent: ConsentResultSchema,
+    timestamp: z.string(),
 });
 
 export type ScreenshotResult = z.infer<typeof ScreenshotResultSchema>;
@@ -262,6 +310,8 @@ export interface IPlaywrightMCPServer {
   readonly config: ServerConfig;
   readonly browserPool: IBrowserPool;
   readonly toolRegistry: IToolRegistry;
+
+    getConsentPatterns(): ConsentPatterns;
   start(): Promise<void>;
   stop(): Promise<void>;
 }
@@ -275,7 +325,8 @@ export interface IConnectionManager {
   getAllConnections(): IMCPConnection[];
   removeConnection(id: string): void;
   cleanup(): void;
-  broadcastNotification(notification: { method: string; params: any }): Promise<void>;
+
+    broadcastNotification(notification: { method: string; params: Record<string, unknown> }): Promise<void>;
 }
 
 /**
@@ -293,8 +344,8 @@ export interface BrowserContextOptions {
  * Default browser context options
  */
 export const DEFAULT_BROWSER_CONTEXT: BrowserContextOptions = {
-  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  viewport: { width: 1920, height: 1080 },
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    viewport: {width: 1920, height: 1080},
 } as const;
 
 /**
@@ -310,7 +361,7 @@ export interface PageSessionConfig {
 
 // Navigation tool context
 export interface NavigationToolContext extends ToolContext {
-    pageManager?: import('../core/pageManager.js').PageManager;
+    pageManager: import('../core/pageManager.js').PageManager;
 }
 
 // Navigate tool arguments
@@ -710,10 +761,13 @@ export const BrowserExecuteJavascriptArgsSchema = z.object({
 export type BrowserExecuteJavascriptArgs = z.infer<typeof BrowserExecuteJavascriptArgsSchema>;
 
 // Export progress-related types
-export * from './progress.js';
+export * from '@/types/progress.js';
 
 // Export monitoring-related types
-export * from './monitoring.js';
+export * from '@/types/monitoring.js';
 
 // Export rate limiting types
-export * from './rateLimiting.js';
+export * from '@/types/rateLimiting.js';
+
+// Export PageSession from pageManager
+export type {PageSession, PageManagerConfig} from '@/core/pageManager.js';

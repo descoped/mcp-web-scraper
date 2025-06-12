@@ -5,7 +5,7 @@
 import {beforeEach, describe, expect, it} from 'vitest';
 
 // Using relative path instead of alias
-import {ConsentHandler} from '../../../src/core/consentHandler.js';
+import {ConsentHandler} from '@/core/consentHandler.js';
 
 describe('ConsentHandler', () => {
     let consentHandler: ConsentHandler;

@@ -1,0 +1,528 @@
+# Phase 4C.1 - International Site Expansion Rules
+# Major international news sites with enhanced extraction patterns
+
+version: "1.0.0"
+description: "International news site extraction rules for global content support"
+last_updated: "2025-01-06"
+
+international_sites:
+  # BBC News
+  - id: "bbc_com_articles"
+    name: "BBC News Article Extraction"
+    domains:
+      - "bbc.com"
+      - "bbc.co.uk"
+    priority: 100
+    selectors:
+      container:
+        - "article[data-component='text-block']"
+        - "main[role='main']"
+        - ".story-body"
+      title:
+        - "h1[data-testid='headline']"
+        - "h1.story-headline"
+        - ".gel-trafalgar-bold"
+        - "h1"
+      content:
+        - "[data-component='text-block'] p"
+        - ".story-body__inner p"
+        - ".gel-body-copy p"
+        - "div[data-component='text-block']"
+      author:
+        - "[data-testid='byline']"
+        - ".byline__author"
+        - ".author-unit a"
+        - ".gel-minion"
+      date:
+        - "time[datetime]"
+        - "[data-testid='timestamp']"
+        - ".date"
+      summary:
+        - "[data-component='text-block']:first-of-type"
+        - ".story-body__introduction"
+        - ".gel-great-primer-bold"
+    exclusions:
+      - ".media-placeholder"
+      - ".story-promo"
+      - ".gel-layout__item--secondary"
+      - "[data-component='ad-slot']"
+    quality_indicators:
+      required_fields: [ "title", "content" ]
+      minimum_content_length: 200
+      article_indicators:
+        - "article"
+        - "[itemtype*='NewsArticle']"
+        - ".story-body"
+    metadata:
+      language: "en"
+      region: "uk"
+      category: "news"
+      charset: "utf-8"
+
+  # CNN
+  - id: "cnn_com_articles"
+    name: "CNN Article Extraction"
+    domains:
+      - "cnn.com"
+      - "edition.cnn.com"
+    priority: 100
+    selectors:
+      container:
+        - "article.pg-rail-tall__main"
+        - ".l-container"
+        - "main"
+      title:
+        - "h1.headline__text"
+        - "h1[data-analytics='headline']"
+        - ".pg-headline"
+        - "h1"
+      content:
+        - ".zn-body__paragraph"
+        - ".BasicArticle__main p"
+        - ".Paragraph__component"
+        - "section[data-module-name='ArticleBody'] p"
+      author:
+        - ".byline__name"
+        - ".metadata__byline a"
+        - "[data-analytics='byline']"
+        - ".author"
+      date:
+        - ".timestamp"
+        - "time[datetime]"
+        - ".metadata__date"
+        - "[data-analytics='publish-date']"
+      summary:
+        - ".zn-body__paragraph:first-of-type"
+        - ".BasicArticle__main p:first-of-type"
+        - ".Article__subtitle"
+    exclusions:
+      - ".ad-slot"
+      - ".zn-related"
+      - ".media__caption"
+      - ".social-follow"
+    quality_indicators:
+      required_fields: [ "title", "content" ]
+      minimum_content_length: 300
+      article_indicators:
+        - "article"
+        - ".pg-rail-tall__main"
+        - "[data-analytics='article']"
+    metadata:
+      language: "en"
+      region: "us"
+      category: "news"
+      charset: "utf-8"
+
+  # Reuters
+  - id: "reuters_com_articles"
+    name: "Reuters Article Extraction"
+    domains:
+      - "reuters.com"
+    priority: 100
+    selectors:
+      container:
+        - "article[data-testid='ArticleBodyWrapper']"
+        - ".StandardArticleBody_body"
+        - "main"
+      title:
+        - "h1[data-testid='Heading']"
+        - ".ArticleHeader_headline"
+        - "h1"
+      content:
+        - "[data-testid='paragraph']"
+        - ".StandardArticleBody_body p"
+        - ".text__text__1FZLe p"
+        - ".PaywallArticleBody_body p"
+      author:
+        - "[data-testid='AuthorByline']"
+        - ".ArticleHeader_author"
+        - ".BylineBar_byline a"
+      date:
+        - "time[datetime]"
+        - "[data-testid='ArticleDateTime']"
+        - ".ArticleHeader_date"
+      summary:
+        - "[data-testid='paragraph']:first-of-type"
+        - ".StandardArticleBody_body p:first-of-type"
+        - ".ArticleHeader_summary"
+    exclusions:
+      - ".Slideshow_container"
+      - ".RelatedCoverage_container"
+      - ".ad-container"
+      - ".trust-badge"
+    quality_indicators:
+      required_fields: [ "title", "content", "date" ]
+      minimum_content_length: 250
+      article_indicators:
+        - "article"
+        - "[data-testid='ArticleBodyWrapper']"
+        - ".StandardArticleBody_body"
+    metadata:
+      language: "en"
+      region: "international"
+      category: "news"
+      charset: "utf-8"
+
+  # The Guardian
+  - id: "theguardian_com_articles"
+    name: "The Guardian Article Extraction"
+    domains:
+      - "theguardian.com"
+    priority: 100
+    selectors:
+      container:
+        - "article"
+        - ".content__main-column"
+        - "main"
+      title:
+        - "h1[data-gu-name='headline']"
+        - ".content__headline"
+        - "h1"
+      content:
+        - ".content__article-body p"
+        - "[data-gu-name='body'] p"
+        - ".article-body-commercial-selector p"
+      author:
+        - "[data-gu-name='meta'] a"
+        - ".byline a"
+        - ".content__meta-container a"
+      date:
+        - "time[datetime]"
+        - "[data-gu-name='meta'] time"
+        - ".content__dateline time"
+      summary:
+        - ".content__standfirst"
+        - ".content__article-body p:first-of-type"
+        - "[data-gu-name='standfirst']"
+    exclusions:
+      - ".ad-slot"
+      - ".element-rich-link"
+      - ".submeta"
+      - ".content__meta-container--twitter"
+    quality_indicators:
+      required_fields: [ "title", "content" ]
+      minimum_content_length: 200
+      article_indicators:
+        - "article"
+        - ".content__main-column"
+        - "[data-gu-name='body']"
+    metadata:
+      language: "en"
+      region: "uk"
+      category: "news"
+      charset: "utf-8"
+
+  # Associated Press
+  - id: "apnews_com_articles"
+    name: "AP News Article Extraction"
+    domains:
+      - "apnews.com"
+    priority: 100
+    selectors:
+      container:
+        - ".Article"
+        - "main"
+      title:
+        - "h1[data-key='card-headline']"
+        - ".Page-headline"
+        - "h1"
+      content:
+        - ".Article p"
+        - ".RichTextStoryBody p"
+        - ".StoryBodyParagraph"
+      author:
+        - ".Component-bylines a"
+        - ".Page-authors a"
+        - "[data-key='card-byline']"
+      date:
+        - "bsp-timestamp"
+        - "time[datetime]"
+        - ".Page-datePublished"
+      summary:
+        - ".Article p:first-of-type"
+        - ".Page-leadArt + p"
+    exclusions:
+      - ".ad-container"
+      - ".Component-related"
+      - ".SocialShare"
+    quality_indicators:
+      required_fields: [ "title", "content" ]
+      minimum_content_length: 200
+    metadata:
+      language: "en"
+      region: "us"
+      category: "news"
+
+  # Deutsche Welle (English)
+  - id: "dw_com_articles"
+    name: "Deutsche Welle Article Extraction"
+    domains:
+      - "dw.com"
+    priority: 90
+    selectors:
+      container:
+        - "article.col3"
+        - ".longText"
+        - "main"
+      title:
+        - "h1"
+        - ".hl1"
+      content:
+        - ".longText p"
+        - "article.col3 p"
+        - ".intro + div p"
+      author:
+        - ".author"
+        - ".artikel_autor"
+      date:
+        - ".date"
+        - "time[datetime]"
+      summary:
+        - ".intro"
+        - ".longText p:first-of-type"
+    exclusions:
+      - ".kicker"
+      - ".sharing"
+      - ".more"
+    metadata:
+      language: "en"
+      region: "de"
+      category: "news"
+
+  # Al Jazeera English
+  - id: "aljazeera_com_articles"
+    name: "Al Jazeera English Article Extraction"
+    domains:
+      - "aljazeera.com"
+    priority: 90
+    selectors:
+      container:
+        - "article.wysiwyg"
+        - ".main-article-body"
+        - "main"
+      title:
+        - "h1.post-title"
+        - ".article-header h1"
+        - "h1"
+      content:
+        - ".wysiwyg p"
+        - ".main-article-body p"
+        - "article p"
+      author:
+        - ".author-link"
+        - ".article-header .author"
+      date:
+        - ".date-simple"
+        - "time[datetime]"
+      summary:
+        - ".wysiwyg p:first-of-type"
+    exclusions:
+      - ".article-trending"
+      - ".read-more-inline"
+      - ".social-media-buttons"
+    metadata:
+      language: "en"
+      region: "qa"
+      category: "news"
+
+  # France 24 English
+  - id: "france24_com_articles"
+    name: "France 24 English Article Extraction"
+    domains:
+      - "france24.com"
+    priority: 90
+    selectors:
+      container:
+        - "article.t-content"
+        - ".article__content"
+        - "main"
+      title:
+        - "h1.t-content__title"
+        - ".article__title h1"
+        - "h1"
+      content:
+        - ".t-content__body p"
+        - ".article__text p"
+        - ".wysiwyg p"
+      author:
+        - ".m-from-author__name"
+        - ".article__author"
+      date:
+        - ".t-content__date"
+        - "time[datetime]"
+      summary:
+        - ".t-content__chapo"
+        - ".article__summary"
+    exclusions:
+      - ".m-tag"
+      - ".article__share"
+      - ".m-in-article-ad"
+    metadata:
+      language: "en"
+      region: "fr"
+      category: "news"
+
+# Content Platform Sites
+content_platforms:
+  # Medium
+  - id: "medium_com_articles"
+    name: "Medium Article Extraction"
+    domains:
+      - "medium.com"
+    priority: 100
+    selectors:
+      container:
+        - "article"
+        - ".postArticle"
+        - "main"
+      title:
+        - "h1[data-testid='storyTitle']"
+        - ".graf--title"
+        - "h1"
+      content:
+        - ".pw-post-body-paragraph"
+        - ".section-content p"
+        - "article p"
+      author:
+        - "[data-testid='authorName']"
+        - ".postMetaInline a"
+        - ".ui-captionStrong"
+      date:
+        - "time[datetime]"
+        - "[data-testid='storyPublishDate']"
+        - ".postMetaInline time"
+      summary:
+        - ".pw-subtitle-paragraph"
+        - ".graf--subtitle"
+        - "article p:first-of-type"
+    exclusions:
+      - ".highlightMenu"
+      - ".postActions"
+      - ".responsesWrapper"
+    quality_indicators:
+      required_fields: [ "title", "content", "author" ]
+      minimum_content_length: 300
+      article_indicators:
+        - "article"
+        - ".postArticle"
+        - "[data-testid='storyTitle']"
+    metadata:
+      language: "en"
+      platform: "medium"
+      category: "blog"
+
+  # Substack
+  - id: "substack_com_articles"
+    name: "Substack Article Extraction"
+    domains:
+      - "substack.com"
+    priority: 100
+    selectors:
+      container:
+        - ".post"
+        - ".single-post"
+        - "article"
+      title:
+        - "h1.post-title"
+        - ".pencraft h1"
+        - "h1"
+      content:
+        - ".available-content p"
+        - ".markup p"
+        - ".pencraft p"
+      author:
+        - ".author-name"
+        - ".pencraft .author"
+        - "[data-testid='author-name']"
+      date:
+        - ".post-date"
+        - "time[datetime]"
+        - ".pencraft time"
+      summary:
+        - ".subtitle"
+        - ".available-content p:first-of-type"
+    exclusions:
+      - ".paywall"
+      - ".subscribe-widget"
+      - ".social-links"
+    quality_indicators:
+      required_fields: [ "title", "content", "author" ]
+      minimum_content_length: 200
+    metadata:
+      platform: "substack"
+      category: "newsletter"
+
+  # LinkedIn Articles
+  - id: "linkedin_com_articles"
+    name: "LinkedIn Article Extraction"
+    domains:
+      - "linkedin.com"
+    priority: 95
+    selectors:
+      container:
+        - ".article-content"
+        - "article"
+        - ".reader-article-content"
+      title:
+        - "h1.reader-article-header__title"
+        - ".article-title h1"
+        - "h1"
+      content:
+        - ".reader-article-content p"
+        - ".article-content p"
+        - "article p"
+      author:
+        - ".reader-author-info__author-name"
+        - ".article-author-name"
+        - ".author-info__name"
+      date:
+        - ".reader-article-header__published-date"
+        - "time[datetime]"
+      summary:
+        - ".reader-article-content p:first-of-type"
+        - ".article-content p:first-of-type"
+    exclusions:
+      - ".social-counts-reactions"
+      - ".article-navigation"
+      - ".follow-author"
+    quality_indicators:
+      required_fields: [ "title", "content", "author" ]
+      minimum_content_length: 250
+    metadata:
+      platform: "linkedin"
+      category: "professional"
+
+# Region-specific configurations
+regional_configs:
+  scandinavian:
+    timeout_multiplier: 1.0
+    consent_handling: "strict"
+    languages: [ "no", "sv", "da" ]
+
+  european:
+    timeout_multiplier: 1.2
+    consent_handling: "strict"
+    languages: [ "en", "de", "fr", "es", "it" ]
+
+  american:
+    timeout_multiplier: 1.0
+    consent_handling: "standard"
+    languages: [ "en", "es" ]
+
+  international:
+    timeout_multiplier: 1.5
+    consent_handling: "adaptive"
+    languages: [ "en", "ar", "zh", "fr", "es", "de" ]
+
+# Quality thresholds for international content
+quality_thresholds:
+  excellent: 0.85
+  good: 0.70
+  acceptable: 0.55
+  poor: 0.40
+
+# Performance targets
+performance_targets:
+  extraction_time_ms: 3000
+  success_rate: 0.80
+  content_completeness: 0.75

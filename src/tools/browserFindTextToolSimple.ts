@@ -3,9 +3,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserFindTextArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserFindTextArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserFindTextArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserFindTextArgsSchema} from '@/types/index.js';
 
 export class BrowserFindTextTool extends BaseTool {
     public readonly name = 'browser_find_text';
@@ -29,7 +29,7 @@ export class BrowserFindTextTool extends BaseTool {
             const matches = await session.page.evaluate(({searchText, strategy}: {
                 searchText: string,
                 strategy: string
-            }) => {
+            }): Array<Record<string, unknown>> => {
                 const allText = document.body.textContent || '';
                 const found = strategy === 'exact' ?
                     allText.includes(searchText) :

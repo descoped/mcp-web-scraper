@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserSnapshotArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserSnapshotArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserSnapshotArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserSnapshotArgsSchema} from '@/types/index.js';
 
 export class BrowserSnapshotTool extends BaseTool {
     public readonly name = 'browser_snapshot';
@@ -27,7 +27,7 @@ export class BrowserSnapshotTool extends BaseTool {
 
         try {
             // Get accessibility snapshot options
-            const snapshotOptions: any = {
+            const snapshotOptions: Record<string, unknown> = {
                 interestingOnly: validatedArgs.interestingOnly
             };
 
@@ -82,7 +82,7 @@ export class BrowserSnapshotTool extends BaseTool {
         }
     }
 
-    private async getAccessibilityInfo(page: any) {
+    private async getAccessibilityInfo(page: import('playwright').Page) {
         try {
             return await page.evaluate(() => {
                 const getAccessibilityFeatures = () => {
@@ -159,7 +159,7 @@ export class BrowserSnapshotTool extends BaseTool {
         }
     }
 
-    private analyzeAccessibilitySnapshot(snapshot: any) {
+    private analyzeAccessibilitySnapshot(snapshot: unknown | null) {
         if (!snapshot) {
             return {
                 nodeCount: 0,
@@ -184,40 +184,43 @@ export class BrowserSnapshotTool extends BaseTool {
             issues: [] as string[]
         };
 
-        const analyzeNode = (node: any) => {
+        const analyzeNode = (node: unknown) => {
+            if (!node || typeof node !== 'object') return;
+
+            const nodeObj = node as Record<string, unknown>;
             analysis.nodeCount++;
 
-            if (node.role) {
-                analysis.roles[node.role] = (analysis.roles[node.role] || 0) + 1;
+            if (nodeObj.role && typeof nodeObj.role === 'string') {
+                analysis.roles[nodeObj.role] = (analysis.roles[nodeObj.role] || 0) + 1;
             }
 
-            if (node.name) {
+            if (nodeObj.name) {
                 analysis.hasNames++;
             }
 
-            if (node.description) {
+            if (nodeObj.description) {
                 analysis.hasDescriptions++;
             }
 
-            if (node.value !== undefined) {
+            if (nodeObj.value !== undefined) {
                 analysis.hasValues++;
             }
 
             // Check for interactive elements
             const interactiveRoles = ['button', 'link', 'textbox', 'combobox', 'slider', 'menuitem'];
-            if (node.role && interactiveRoles.includes(node.role)) {
+            if (nodeObj.role && typeof nodeObj.role === 'string' && interactiveRoles.includes(nodeObj.role)) {
                 analysis.interactiveNodes++;
             }
 
             // Check for landmarks
             const landmarkRoles = ['main', 'navigation', 'banner', 'contentinfo', 'complementary', 'search'];
-            if (node.role && landmarkRoles.includes(node.role)) {
+            if (nodeObj.role && typeof nodeObj.role === 'string' && landmarkRoles.includes(nodeObj.role)) {
                 analysis.landmarks++;
             }
 
             // Analyze children recursively
-            if (node.children) {
-                node.children.forEach(analyzeNode);
+            if (Array.isArray(nodeObj.children)) {
+                nodeObj.children.forEach(analyzeNode);
             }
         };
 
@@ -239,7 +242,7 @@ export class BrowserSnapshotTool extends BaseTool {
         return analysis;
     }
 
-    private async getAriaInfo(page: any) {
+    private async getAriaInfo(page: import('playwright').Page) {
         try {
             return await page.evaluate(() => {
                 const ariaElements = document.querySelectorAll('[aria-label], [aria-labelledby], [aria-describedby], [role]');
@@ -292,7 +295,7 @@ export class BrowserSnapshotTool extends BaseTool {
         }
     }
 
-    private async getFormAccessibility(page: any) {
+    private async getFormAccessibility(page: import('playwright').Page) {
         try {
             return await page.evaluate(() => {
                 const forms = Array.from(document.forms);

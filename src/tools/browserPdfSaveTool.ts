@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserPdfSaveArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserPdfSaveArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserPdfSaveArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserPdfSaveArgsSchema} from '@/types/index.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -32,7 +32,7 @@ export class BrowserPdfSaveTool extends BaseTool {
             const pageInfo = await this.getPageInfo(session.page);
 
             // Prepare PDF options
-            const pdfOptions: any = {
+            const pdfOptions: Record<string, unknown> = {
                 format: validatedArgs.format,
                 scale: validatedArgs.scale,
                 displayHeaderFooter: validatedArgs.displayHeaderFooter,
@@ -131,7 +131,7 @@ export class BrowserPdfSaveTool extends BaseTool {
         }
     }
 
-    private async getPageInfo(page: any) {
+    private async getPageInfo(page: import('playwright').Page) {
         try {
             return await page.evaluate(() => {
                 return {

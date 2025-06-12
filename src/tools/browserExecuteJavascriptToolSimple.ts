@@ -3,9 +3,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserExecuteJavascriptArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserExecuteJavascriptArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserExecuteJavascriptArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserExecuteJavascriptArgsSchema} from '@/types/index.js';
 
 export class BrowserExecuteJavascriptTool extends BaseTool {
     public readonly name = 'browser_execute_javascript';
@@ -32,8 +32,8 @@ export class BrowserExecuteJavascriptTool extends BaseTool {
             }
 
             const startTime = Date.now();
-            let result: any;
-            let executionError: any = null;
+            let result: unknown;
+            let executionError: unknown = null;
 
             try {
                 // Execute JavaScript

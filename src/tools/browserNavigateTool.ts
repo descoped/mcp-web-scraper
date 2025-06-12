@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserNavigateArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserNavigateArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserNavigateArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserNavigateArgsSchema} from '@/types/index.js';
 
 export class BrowserNavigateTool extends BaseTool {
     public readonly name = 'browser_navigate';

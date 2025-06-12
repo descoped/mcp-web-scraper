@@ -1,0 +1,632 @@
+# Site-specific extraction rules for MCP Web Scraper v1.0.1
+# Norwegian news sites with >95% accuracy target
+
+version: "1.0.1"
+description: "Site-specific extraction rules for enhanced Norwegian content detection"
+
+# Global configuration
+config:
+  enableRuleValidation: true
+  enableRuleCaching: true
+  hotReloadInDevelopment: true
+  defaultTimeout: 30000
+
+# Site-specific rules
+rules:
+  # Major Norwegian News Sites
+  - id: "vg_no_articles"
+    name: "VG.no Article Extraction"
+    description: "Optimized extraction for VG.no news articles with sport and general content support"
+    domains:
+      - "vg.no"
+    urlPatterns:
+      - "^https://www\\.vg\\.no/.*/"
+      - "^https://www\\.vg\\.no/sport/.*"
+      - "^https://www\\.vg\\.no/rampelys/.*"
+    priority: 100
+    selectors:
+      container:
+        - "article.article-entity"
+        - "main[role='main']"
+        - ".article-wrapper"
+      title:
+        - "h1[data-cy='article-headline']"
+        - "h1.article-title"
+        - "h1.headline"
+        - "h1"
+      content:
+        - ".article-body .text-body p"
+        - ".article-body p"
+        - "article .content p"
+        - ".story-content p"
+      author:
+        - "[data-cy='byline-author'] a"
+        - ".author-name a"
+        - ".byline a"
+        - ".article-byline a"
+      date:
+        - "[data-cy='publish-time']"
+        - "time[datetime]"
+        - ".publish-date"
+        - ".article-time"
+      summary:
+        - ".article-lead"
+        - ".ingress"
+        - ".summary"
+    exclusions:
+      - ".advertisement"
+      - ".related-articles"
+      - ".social-sharing"
+      - ".newsletter-signup"
+      - ".comment-section"
+      - ".ad-container"
+    contentProcessing:
+      - type: "removePhrase"
+        pattern: "Les også:"
+        scope: "content"
+      - type: "removePhrase"
+        pattern: "Se video:"
+        scope: "content"
+      - type: "removeElement"
+        selector: ".video-embed"
+        keepText: false
+      - type: "removeElement"
+        selector: ".related-content"
+        keepText: false
+    segments:
+      - name: "lead"
+        selector: ".article-lead"
+        type: "summary"
+        priority: 1
+      - name: "faktaboks"
+        selector: ".faktaboks"
+        type: "supplementary"
+        priority: 2
+    metadata:
+      language: "no"
+      charset: "utf-8"
+      category: "news"
+      lastUpdated: "2025-01-11"
+
+  - id: "nrk_no_articles"
+    name: "NRK.no Article Extraction"
+    description: "Optimized extraction for NRK.no news and sport articles"
+    domains:
+      - "nrk.no"
+    urlPatterns:
+      - "^https://www\\.nrk\\.no/.*"
+      - "^https://www\\.nrk\\.no/sport/.*"
+      - "^https://www\\.nrk\\.no/nordland/.*"
+    priority: 100
+    selectors:
+      container:
+        - "article[role='article']"
+        - "main.article-main"
+        - ".article-container"
+      title:
+        - "h1.article-title"
+        - ".title-large"
+        - "h1[data-testid='article-title']"
+        - "h1"
+      content:
+        - ".article-body p"
+        - ".rich-text p"
+        - ".article-content p"
+        - "article .text p"
+      author:
+        - ".byline-author"
+        - ".article-author"
+        - ".author-link"
+        - ".byline a"
+      date:
+        - ".article-date"
+        - "time.datetime"
+        - "time[datetime]"
+        - ".publish-time"
+      summary:
+        - ".article-ingress"
+        - ".lead-text"
+        - ".summary"
+    exclusions:
+      - ".related-articles"
+      - ".share-buttons"
+      - ".nrk-footer"
+      - ".sidebar"
+    contentProcessing:
+      - type: "removePhrase"
+        pattern: "– NRK"
+        scope: "content"
+      - type: "removePhrase"
+        pattern: "Les også:"
+        scope: "content"
+      - type: "normalizeDate"
+        pattern: "\\d{1,2}\\. \\w+ \\d{4}"
+        format: "norwegian"
+    metadata:
+      language: "no"
+      charset: "utf-8"
+      category: "news"
+
+  - id: "dagbladet_no_articles"
+    name: "Dagbladet.no Article Extraction"
+    description: "Optimized extraction for Dagbladet.no articles"
+    domains:
+      - "dagbladet.no"
+    urlPatterns:
+      - "^https://www\\.dagbladet\\.no/.*"
+      - "^https://www\\.dagbladet\\.no/sport/.*"
+    priority: 100
+    selectors:
+      container:
+        - "article.article"
+        - "main.main-content"
+        - ".article-wrapper"
+      title:
+        - "h1[data-testid='article-headline']"
+        - ".article-headline"
+        - "h1.headline"
+        - "h1.title"
+        - ".page-title h1"
+        - "h1"
+      content:
+        - ".article-text p"
+        - ".rich-text-body p"
+        - ".article-body p"
+        - ".content-text p"
+        - ".story-text p"
+        - ".article-content p"
+        - "article p"
+        - ".body-text p"
+        - ".entry-content p"
+      author:
+        - ".article-byline a"
+        - ".author-link"
+        - ".byline-author"
+        - ".author-name"
+      date:
+        - ".article-publish-time"
+        - "time[datetime]"
+        - ".publish-date"
+        - ".article-time"
+      summary:
+        - ".article-lead"
+        - ".ingress"
+        - ".lead-paragraph"
+    exclusions:
+      - ".teaser-list"
+      - ".article-footer"
+      - ".db-video-player"
+      - ".advertisement"
+      - ".related-content"
+    segments:
+      - name: "lead"
+        selector: ".article-lead"
+        type: "summary"
+        priority: 1
+    contentProcessing:
+      - type: "removePhrase"
+        pattern: "Les også:"
+        scope: "content"
+    metadata:
+      language: "no"
+      category: "news"
+
+  - id: "tv2_no_articles"
+    name: "TV2.no Article Extraction"
+    description: "Optimized extraction for TV2.no sport and news articles"
+    domains:
+      - "tv2.no"
+    urlPatterns:
+      - "^https://www\\.tv2\\.no/.*"
+      - "^https://www\\.tv2\\.no/sport/.*"
+    priority: 100
+    selectors:
+      container:
+        - "article.article"
+        - "main[role='main']"
+        - ".article-content"
+      title:
+        - "h1.article-headline"
+        - ".headline"
+        - "h1[data-testid='headline']"
+        - "h1"
+      content:
+        - ".article-text p"
+        - ".content-text p"
+        - "article .body p"
+        - ".article-body p"
+      author:
+        - ".article-byline"
+        - ".author"
+        - ".byline-author"
+      date:
+        - ".article-date"
+        - "time[datetime]"
+        - ".publish-time"
+      summary:
+        - ".article-lead"
+        - ".ingress"
+        - ".lead-text"
+    exclusions:
+      - ".related-articles"
+      - ".tv2-footer"
+      - ".video-player"
+      - ".advertisement"
+    contentProcessing:
+      - type: "removePhrase"
+        pattern: "– TV 2"
+        scope: "content"
+    metadata:
+      language: "no"
+      category: "news"
+
+  # Regional Norwegian Sites
+  - id: "bt_no_articles"
+    name: "BT.no (Bergens Tidende) Article Extraction"
+    description: "Regional Norwegian newspaper Bergen"
+    domains:
+      - "bt.no"
+    priority: 90
+    selectors:
+      title:
+        - "h1.article-headline"
+        - ".headline"
+        - "h1"
+      content:
+        - ".article-body p"
+        - ".content p"
+        - "article p"
+      author:
+        - ".byline a"
+        - ".author-name"
+      date:
+        - "time[datetime]"
+        - ".article-time"
+    exclusions:
+      - ".related-articles"
+      - ".bt-footer"
+    metadata:
+      language: "no"
+      category: "regional"
+
+  - id: "dagsavisen_no_articles"
+    name: "Dagsavisen.no Article Extraction"
+    description: "Norwegian daily newspaper"
+    domains:
+      - "dagsavisen.no"
+    priority: 90
+    selectors:
+      title:
+        - "h1.article-title"
+        - ".headline"
+        - "h1"
+      content:
+        - ".article-content p"
+        - ".text-content p"
+        - "article p"
+      author:
+        - ".article-byline"
+        - ".author"
+      date:
+        - "time[datetime]"
+        - ".publish-date"
+    metadata:
+      language: "no"
+      category: "regional"
+
+  # Business/Specialized Sites
+  - id: "e24_no_business"
+    name: "E24.no Business Articles"
+    description: "Norwegian business and finance news"
+    domains:
+      - "e24.no"
+    priority: 95
+    selectors:
+      title:
+        - "h1.article-headline"
+        - "h1.entry-title"
+        - ".headline"
+        - "h1[data-testid='headline']"
+        - ".page-title h1"
+        - "h1"
+      content:
+        - ".article-body p"
+        - ".story-body p"
+        - ".entry-content p"
+        - ".content p"
+        - ".article-content p"
+        - "article p"
+        - ".text-content p"
+        - "main p"
+      author:
+        - ".byline a"
+        - ".author-name"
+        - ".article-author"
+        - ".author"
+        - ".byline"
+      date:
+        - ".article-time"
+        - "time[datetime]"
+        - ".entry-date"
+        - ".publish-date"
+        - ".article-date"
+    contentProcessing:
+      - type: "preserveElement"
+        selector: ".stock-quote"
+        extractAs: "data"
+      - type: "removeElement"
+        selector: ".subscription-wall"
+        keepText: false
+    metadata:
+      category: "business"
+      paywall: true
+      language: "no"
+
+  - id: "borsen_dagbladet_no"
+    name: "Børsen (Dagbladet) Business Articles"
+    description: "Business section of Dagbladet"
+    domains:
+      - "borsen.dagbladet.no"
+    priority: 95
+    selectors:
+      title:
+        - "h1.article-headline"
+        - "h1"
+      content:
+        - ".article-body p"
+        - ".content p"
+      author:
+        - ".byline"
+        - ".author"
+      date:
+        - "time[datetime]"
+        - ".article-time"
+    metadata:
+      category: "business"
+      language: "no"
+
+  - id: "kapital_no_analysis"
+    name: "Kapital.no Analysis Articles"
+    description: "Norwegian business analysis and finance"
+    domains:
+      - "kapital.no"
+    priority: 95
+    selectors:
+      title:
+        - "h1.entry-title"
+        - "h1.article-title"
+        - "h1"
+      content:
+        - ".entry-content p"
+        - ".article-content p"
+        - ".content p"
+      author:
+        - ".author-name"
+        - ".byline"
+      date:
+        - ".entry-date"
+        - "time[datetime]"
+    contentProcessing:
+      - type: "handlePaywall"
+        selector: ".paywall-content"
+        strategy: "extract_summary"
+    metadata:
+      category: "analysis"
+      subscription: "premium"
+      language: "no"
+
+  # Niche/Entertainment Sites
+  - id: "nettavisen_no_articles"
+    name: "Nettavisen.no Article Extraction"
+    description: "Norwegian online newspaper"
+    domains:
+      - "nettavisen.no"
+    priority: 85
+    selectors:
+      title:
+        - "h1.article-headline"
+        - ".headline"
+        - "h1"
+      content:
+        - ".article-content p"
+        - ".text-content p"
+        - "article p"
+      author:
+        - ".article-author"
+        - ".byline"
+      date:
+        - "time[datetime]"
+        - ".article-date"
+    metadata:
+      category: "general"
+      language: "no"
+
+  - id: "seher_no_entertainment"
+    name: "Seher.no Entertainment Articles"
+    description: "Norwegian celebrity and entertainment news"
+    domains:
+      - "seher.no"
+    priority: 85
+    selectors:
+      title:
+        - "h1.article-title"
+        - "h1.entry-title"
+        - ".headline"
+        - ".page-title h1"
+        - "h1"
+      content:
+        - ".article-content p"
+        - ".entry-content p"
+        - ".content p"
+        - ".story-content p"
+        - ".post-content p"
+        - "article p"
+        - ".text-content p"
+        - "main p"
+      author:
+        - ".author"
+        - ".byline"
+        - ".author-name"
+        - ".post-author"
+      date:
+        - "time[datetime]"
+        - ".publish-date"
+        - ".entry-date"
+        - ".article-date"
+    metadata:
+      category: "entertainment"
+      language: "no"
+
+  - id: "idrettspolitikk_no"
+    name: "Idrettspolitikk.no Articles"
+    description: "Norwegian sports politics and analysis"
+    domains:
+      - "idrettspolitikk.no"
+    priority: 85
+    selectors:
+      title:
+        - "h1.entry-title"
+        - "h1.post-title"
+        - "h1"
+      content:
+        - ".entry-content p"
+        - ".post-content p"
+        - "article p"
+      author:
+        - ".author-name"
+        - ".post-author"
+      date:
+        - ".entry-date"
+        - "time[datetime]"
+    metadata:
+      category: "sports-analysis"
+      language: "no"
+
+  # Aggregator Sites
+  - id: "msn_com_norwegian"
+    name: "MSN.com Norwegian Content"
+    description: "Enhanced MSN aggregated Norwegian news content with improved selectors"
+    domains:
+      - "msn.com"
+    urlPatterns:
+      - "^https://www\\.msn\\.com/nb-no/.*"
+      - "^http://www\\.msn\\.com/nb-no/.*"
+    priority: 85
+    selectors:
+      container:
+        - "main[role='main']"
+        - ".article-container"
+        - "[data-module='ArticleContainer']"
+        - "article"
+        - ".content-wrapper"
+      title:
+        - "h1[data-module='ArticleTitle']"
+        - "h1[data-testid='article-title']"
+        - ".article-header h1"
+        - "main h1"
+        - "[data-module='title'] h1"
+        - ".page-title h1"
+        - ".story-headline"
+        - "h1.title"
+        - ".article-title"
+        - "h1"
+      content:
+        - "[data-module='ArticleBody'] p"
+        - ".article-body p"
+        - ".story-body p"
+        - ".content-body p"
+        - ".article-content p"
+        - "main .content p"
+        - "[data-testid='article-body'] p"
+        - "article section p"
+        - ".text-content p"
+        - ".body-text p"
+        - "main p"
+      author:
+        - "[data-module='author']"
+        - ".author-info .author-name"
+        - ".byline .author"
+        - ".article-meta .author"
+        - ".author-byline"
+        - ".byline-author"
+        - ".author-name"
+        - ".byline"
+        - ".article-author"
+      date:
+        - "[data-module='ArticleDateTime']"
+        - "[data-testid='article-timestamp']"
+        - ".article-meta time"
+        - ".publish-time"
+        - "time[datetime]"
+        - ".timestamp"
+        - ".publish-date"
+        - ".article-date"
+        - ".date-published"
+      summary:
+        - ".article-description"
+        - ".story-summary"
+        - ".article-lead"
+        - ".content-description"
+    exclusions:
+      - ".related-articles"
+      - ".msn-footer"
+      - ".advertisement"
+      - ".ad-container"
+      - ".promo-content"
+      - ".social-share"
+      - ".newsletter-signup"
+      - ".external-content"
+      - ".sidebar"
+      - "nav"
+      - ".navigation"
+      - ".breadcrumbs"
+    contentProcessing:
+      - type: "removeElement"
+        selector: ".external-link-disclaimer"
+        keepText: false
+      - type: "removeElement"
+        selector: ".ad-insertion"
+        keepText: false
+      - type: "removePhrase"
+        pattern: "Kilde:|Source:"
+        scope: "content"
+      - type: "removePhrase"
+        pattern: "Les mer på|Read more at"
+        scope: "content"
+      - type: "normalizeWhitespace"
+        scope: "all"
+    segments:
+      - name: "main_content"
+        selector: "[data-module='ArticleBody']"
+        type: "content"
+        priority: 1
+      - name: "article_description"
+        selector: ".article-description"
+        type: "summary"
+        priority: 2
+    metadata:
+      category: "aggregator"
+      language: "no"
+      extractionNotes: "Enhanced selectors for MSN's complex aggregated content structure"
+      source: "multiple"
+
+# Test URL validation targets
+testTargets:
+  majorNorwegianNews:
+    successRate: 0.95
+    sites: [ "vg.no", "nrk.no", "dagbladet.no", "tv2.no" ]
+  regionalNorwegian:
+    successRate: 0.90
+    sites: [ "bt.no", "dagsavisen.no" ]
+  businessSpecialized:
+    successRate: 0.90
+    sites: [ "e24.no", "borsen.dagbladet.no", "kapital.no" ]
+  nicheEntertainment:
+    successRate: 0.85
+    sites: [ "nettavisen.no", "seher.no", "idrettspolitikk.no" ]
+  aggregator:
+    successRate: 0.80
+    sites: [ "msn.com" ]
+  overall:
+    successRate: 0.90
+    totalUrls: 29

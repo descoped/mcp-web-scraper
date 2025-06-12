@@ -49,7 +49,7 @@ describe('VG.no Article Scraping Integration', () => {
         const context = {
             browserPool: server.browserPool,
             config: server.config,
-            consentPatterns: server.consentHandler.getPatterns()
+            consentPatterns: server.getConsentPatterns()
         };
 
         const result = await tool.execute({

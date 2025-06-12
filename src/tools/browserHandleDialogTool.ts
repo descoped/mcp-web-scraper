@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserHandleDialogArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserHandleDialogArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserHandleDialogArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserHandleDialogArgsSchema} from '@/types/index.js';
 
 interface DialogInfo {
     type: string;
@@ -109,9 +109,9 @@ export class BrowserHandleDialogTool extends BaseTool {
         }
     }
 
-    private async setupDialogHandler(page: any, sessionId: string, action: string, promptText?: string): Promise<any> {
+    private async setupDialogHandler(page: import('playwright').Page, sessionId: string, action: string, promptText?: string): Promise<Record<string, unknown>> {
         return new Promise((resolve, reject) => {
-            let dialogHandler: ((dialog: any) => Promise<void>) | null = null;
+            let dialogHandler: ((dialog: import('playwright').Dialog) => Promise<void>) | null = null;
 
             const cleanup = () => {
                 if (dialogHandler) {
@@ -119,7 +119,7 @@ export class BrowserHandleDialogTool extends BaseTool {
                 }
             };
 
-            dialogHandler = async (dialog: any) => {
+            dialogHandler = async (dialog: import('playwright').Dialog) => {
                 try {
                     const dialogInfo: DialogInfo = {
                         type: dialog.type(),
@@ -181,7 +181,7 @@ export class BrowserHandleDialogTool extends BaseTool {
     }
 
     // Helper method to check for existing dialogs
-    private async checkForExistingDialogs(page: any): Promise<boolean> {
+    private async checkForExistingDialogs(page: import('playwright').Page): Promise<boolean> {
         try {
             // Try to detect if there are any visible modal dialogs
             return await page.evaluate(() => {

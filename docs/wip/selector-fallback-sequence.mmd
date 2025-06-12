@@ -1,0 +1,141 @@
+sequenceDiagram
+    participant Tool as ScrapeArticleTool
+    participant Detector as HybridDetector
+    participant Rules as SiteRulesLoader
+    participant Universal as UniversalDetector
+    participant Browser as Playwright Page
+    participant Quality as QualityAnalyzer
+    participant Cache as ExtractionCache
+    Note over Tool: Content Extraction Request
+    Tool ->> Detector: extract(page, url, domain)
+    Detector ->> Rules: loadRulesForDomain(domain)
+    Rules ->> Rules: Check site-rules.yaml for domain
+
+    alt Bespoke Rule Found
+        Rules -->> Detector: BespokeRule {selectors, priority}
+        Note over Detector: Strategy 1: Bespoke Rules
+        Detector ->> Detector: extractWithRule(page, rule)
+
+        loop For each field (title, content, author, date)
+            Detector ->> Detector: extractFieldWithSelectors(field, selectors)
+
+            loop For each selector in priority order
+                Detector ->> Browser: page.locator(selector)
+                Browser -->> Detector: ElementHandle or null
+
+                alt Element Found
+                    Detector ->> Browser: element.textContent()
+                    Browser -->> Detector: Text content
+                    Detector ->> Detector: Apply field processing
+                    Note over Detector: Break selector loop - Success
+                else Element Not Found
+                    Note over Detector: Try next selector
+                end
+            end
+
+            alt All Selectors Failed
+                Detector ->> Detector: Field extraction failed
+                Note over Detector: Continue to next field
+            end
+        end
+
+        Detector ->> Quality: assessQuality(extractedData)
+        Quality -->> Detector: QualityScore {score: 0.45, issues: [...]}
+
+        alt Quality Below Threshold (< 0.4)
+            Note over Detector: Bespoke failed - Fallback to Universal
+            Detector ->> Universal: extract(page, url)
+        else Quality Acceptable
+            Detector -->> Tool: Successful bespoke extraction
+        end
+
+    else No Bespoke Rule
+        Note over Detector: Strategy 2: Universal Patterns
+        Detector ->> Universal: extract(page, url)
+    end
+
+    Note over Universal: Universal Pattern Detection
+    Universal ->> Universal: extractWithSchemaOrg(page)
+    Universal ->> Browser: page.locator('script[type="application/ld+json"]')
+    Browser -->> Universal: JSON-LD structured data
+
+    alt Schema.org Data Found
+        Universal ->> Universal: parseStructuredData(jsonLd)
+        Universal ->> Quality: assessQuality(structuredData)
+        Quality -->> Universal: QualityScore
+
+        alt Quality Acceptable
+            Universal -->> Detector: Successful schema.org extraction
+        else Quality Poor
+            Note over Universal: Continue to OpenGraph
+        end
+    end
+
+    Universal ->> Universal: extractWithOpenGraph(page)
+    Universal ->> Browser: page.locator('meta[property^="og:"]')
+    Browser -->> Universal: OpenGraph meta tags
+
+    alt OpenGraph Data Found
+        Universal ->> Universal: parseOpenGraphData(metaTags)
+        Universal ->> Quality: assessQuality(ogData)
+        Quality -->> Universal: QualityScore
+
+        alt Quality Acceptable
+            Universal -->> Detector: Successful OpenGraph extraction
+        else Quality Poor
+            Note over Universal: Continue to Common Selectors
+        end
+    end
+
+    Universal ->> Universal: extractWithCommonSelectors(page)
+
+    loop Common Selector Patterns
+        Note over Universal: Try: article, .content, .post-content,<br/>.entry-content, .article-content, etc.
+        Universal ->> Browser: page.locator(commonSelector)
+        Browser -->> Universal: Content elements
+
+        alt Content Found
+            Universal ->> Universal: extractTextFromElements(elements)
+            Universal ->> Quality: assessQuality(extractedText)
+            Quality -->> Universal: QualityScore
+
+            alt Quality Acceptable
+                Universal -->> Detector: Successful common selector extraction
+            else Quality Poor
+                Note over Universal: Try next selector pattern
+            end
+        end
+    end
+
+    Universal ->> Universal: extractWithHeuristicAnalysis(page)
+    Universal ->> Browser: page.locator('p, div, span')
+    Browser -->> Universal: All text elements
+    Universal ->> Universal: analyzeTextDensity(elements)
+    Universal ->> Universal: detectMainContent(densityMap)
+    Universal ->> Quality: assessQuality(heuristicContent)
+    Quality -->> Universal: QualityScore
+
+    alt Heuristic Analysis Successful
+        Universal -->> Detector: Successful heuristic extraction
+    else All Strategies Failed
+        Universal ->> Universal: emergencyFallback(page)
+        Universal ->> Browser: page.textContent()
+        Browser -->> Universal: Raw page text
+        Universal ->> Universal: cleanRawText(rawText)
+        Universal -->> Detector: Emergency fallback result
+    end
+
+    Detector ->> Quality: validateFinalResult(result)
+    Quality ->> Quality: checkCompleteness(result)
+    Quality ->> Quality: detectFrontpageRisk(result)
+    Quality ->> Quality: validateContentLength(result)
+    Quality -->> Detector: FinalQualityAssessment
+
+    alt Final Quality Acceptable
+        Detector ->> Cache: storeResult(url, result, quality)
+        Cache -->> Detector: Result cached
+        Detector -->> Tool: Extraction successful
+    else Final Quality Poor
+        Detector ->> Detector: markAsLowQuality(result)
+        Detector -->> Tool: Low quality extraction
+    end

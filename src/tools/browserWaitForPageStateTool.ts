@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {BrowserWaitForPageStateArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {BrowserWaitForPageStateArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {BrowserWaitForPageStateArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {BrowserWaitForPageStateArgsSchema} from '@/types/index.js';
 
 interface WaitCondition {
     selector?: string;
@@ -24,13 +24,13 @@ interface WaitResult {
     stateChanges: Array<{
         timestamp: number;
         state: string;
-        details: any;
+        details: Record<string, unknown>;
     }>;
     conditionDetails?: {
         selectorFound?: boolean;
         textFound?: boolean;
         urlMatched?: boolean;
-        functionResult?: any;
+        functionResult?: unknown;
     };
     pageMetrics: {
         loadTime: number;
@@ -109,14 +109,14 @@ export class BrowserWaitForPageStateTool extends BaseTool {
     }
 
     private async waitForPageState(
-        page: any,
+        page: import('playwright').Page,
         state: string,
         condition: WaitCondition | undefined,
         timeout: number,
         pollInterval: number
     ): Promise<WaitResult> {
         const startTime = Date.now();
-        const stateChanges: Array<{ timestamp: number; state: string; details: any }> = [];
+        const stateChanges: Array<{ timestamp: number; state: string; details: Record<string, unknown> }> = [];
         let iterations = 0;
         let conditionMet = false;
         let finalState = 'unknown';
@@ -132,7 +132,7 @@ export class BrowserWaitForPageStateTool extends BaseTool {
             };
 
             // Track page events
-            const trackEvent = (eventName: string, details: any) => {
+            const trackEvent = (eventName: string, details: Record<string, unknown>) => {
                 stateChanges.push({
                     timestamp: Date.now() - startTime,
                     state: eventName,
@@ -151,7 +151,7 @@ export class BrowserWaitForPageStateTool extends BaseTool {
                 trackEvent('domcontentloaded', {domContentLoadedTime: pageMetrics.domContentLoadedTime});
             });
 
-            page.on('response', (response: any) => {
+            page.on('response', (response: import('playwright').Response) => {
                 pageMetrics.resourceCount++;
                 trackEvent('response', {
                     url: response.url(),
@@ -232,9 +232,9 @@ export class BrowserWaitForPageStateTool extends BaseTool {
             if (condition) {
                 const finalConditionCheck = await this.checkCondition(page, condition);
                 conditionDetails = {
-                    selectorFound: condition.selector ? finalConditionCheck.selectorFound : undefined,
-                    textFound: condition.text ? finalConditionCheck.textFound : undefined,
-                    urlMatched: condition.url ? finalConditionCheck.urlMatched : undefined,
+                    selectorFound: condition.selector ? Boolean(finalConditionCheck.selectorFound) : undefined,
+                    textFound: condition.text ? Boolean(finalConditionCheck.textFound) : undefined,
+                    urlMatched: condition.url ? Boolean(finalConditionCheck.urlMatched) : undefined,
                     functionResult: condition.function ? finalConditionCheck.functionResult : undefined
                 };
             }
@@ -267,12 +267,12 @@ export class BrowserWaitForPageStateTool extends BaseTool {
                 },
                 conditionDetails: {
                     error: error instanceof Error ? error.message : String(error)
-                } as any
+                } as Record<string, unknown>
             };
         }
     }
 
-    private async checkPageState(page: any, requestedState: string): Promise<string> {
+    private async checkPageState(page: import('playwright').Page, requestedState: string): Promise<string> {
         try {
             const readyState = await page.evaluate(() => document.readyState);
 
@@ -287,18 +287,25 @@ export class BrowserWaitForPageStateTool extends BaseTool {
                 default:
                     return readyState;
             }
-        } catch (error) {
+        } catch {
             return 'error';
         }
     }
 
-    private async checkCondition(page: any, condition: WaitCondition): Promise<any> {
+    private async checkCondition(page: import('playwright').Page, condition: WaitCondition): Promise<{
+        met: boolean;
+        selectorFound: boolean;
+        textFound: boolean;
+        urlMatched: boolean;
+        functionResult: unknown;
+        error?: string;
+    }> {
         const result = {
             met: false,
             selectorFound: false,
             textFound: false,
             urlMatched: false,
-            functionResult: null as any
+            functionResult: null as unknown
         };
 
         try {
@@ -335,7 +342,7 @@ export class BrowserWaitForPageStateTool extends BaseTool {
                 (!condition.selector || result.selectorFound) &&
                 (!condition.text || result.textFound) &&
                 (!condition.url || result.urlMatched) &&
-                (!condition.function || (result.functionResult && result.functionResult !== false))
+                (!condition.function || (Boolean(result.functionResult) && result.functionResult !== false))
             );
 
             return result;
@@ -347,7 +354,7 @@ export class BrowserWaitForPageStateTool extends BaseTool {
         }
     }
 
-    private async getPageStateInfo(page: any): Promise<any> {
+    private async getPageStateInfo(page: import('playwright').Page): Promise<Record<string, unknown>> {
         try {
             return await page.evaluate(() => {
                 const performance = window.performance;
@@ -392,7 +399,7 @@ export class BrowserWaitForPageStateTool extends BaseTool {
         }
     }
 
-    private analyzeWaitPerformance(waitResult: WaitResult, startTime: number): any {
+    private analyzeWaitPerformance(waitResult: WaitResult, _startTime: number): Record<string, unknown> {
         const {waitTime, iterations, stateChanges, pageMetrics} = waitResult;
 
         const performance = {

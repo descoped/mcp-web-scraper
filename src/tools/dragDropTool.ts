@@ -4,9 +4,9 @@
  */
 
 import {zodToJsonSchema} from 'zod-to-json-schema';
-import {BaseTool} from '../core/toolRegistry.js';
-import type {DragDropArgs, NavigationToolContext, ToolResult} from '../types/index.js';
-import {DragDropArgsSchema} from '../types/index.js';
+import {BaseTool} from '@/core/toolRegistry.js';
+import type {DragDropArgs, NavigationToolContext, ToolResult} from '@/types/index.js';
+import {DragDropArgsSchema} from '@/types/index.js';
 
 export class DragDropTool extends BaseTool {
     public readonly name = 'drag_drop';
@@ -26,8 +26,8 @@ export class DragDropTool extends BaseTool {
         }
 
         try {
-            // Take screenshot before drag operation for debugging
-            const beforeScreenshot = await session.page.screenshot({fullPage: false});
+            // Take screenshot before drag operation for debugging (not used)
+            // const beforeScreenshot = await session.page.screenshot({fullPage: false});
 
             let sourcePosition: { x: number; y: number };
             let targetPosition: { x: number; y: number };
@@ -88,8 +88,8 @@ export class DragDropTool extends BaseTool {
             // Wait a moment for any drop effects to complete
             await session.page.waitForTimeout(500);
 
-            // Take screenshot after drag operation
-            const afterScreenshot = await session.page.screenshot({fullPage: false});
+            // Take screenshot after drag operation (not used)
+            // const afterScreenshot = await session.page.screenshot({fullPage: false});
 
             // Check if any elements moved or changed (basic validation)
             const validation = await session.page.evaluate(({source, target}: { source: string, target: string }) => {
@@ -135,14 +135,14 @@ export class DragDropTool extends BaseTool {
     }
 
     // Helper method to validate element positions before drag
-    private async validateDragElements(page: any, sourceSelector: string, targetSelector: string): Promise<{
+    private async validateDragElements(page: import('playwright').Page, sourceSelector: string, targetSelector: string): Promise<{
         sourceValid: boolean;
         targetValid: boolean;
-        sourceInfo?: any;
-        targetInfo?: any;
+        sourceInfo?: Record<string, unknown> | null;
+        targetInfo?: Record<string, unknown> | null;
     }> {
         try {
-            const result = await page.evaluate((source: string, target: string) => {
+            const result = await page.evaluate(({source, target}: { source: string, target: string }) => {
                 const sourceEl = document.querySelector(source);
                 const targetEl = document.querySelector(target);
 
@@ -177,10 +177,10 @@ export class DragDropTool extends BaseTool {
                     sourceInfo: getElementInfo(sourceEl),
                     targetInfo: getElementInfo(targetEl)
                 };
-            }, sourceSelector, targetSelector);
+            }, {source: sourceSelector, target: targetSelector});
 
             return result;
-        } catch (error) {
+        } catch {
             return {
                 sourceValid: false,
                 targetValid: false

@@ -1,0 +1,66 @@
+graph TD
+    A[System Validation Start] --> B{Dataset File Exists?}
+    B -->|No| C[ERROR: File not found]
+    B -->|Yes| D[Load YAML Content]
+    D --> E{YAML Parse Success?}
+    E -->|No| F[ERROR: Invalid YAML syntax]
+    E -->|Yes| G{dataset is not null?}
+    G -->|No| H[ERROR: Dataset is null/undefined]
+    G -->|Yes| I{dataset.domains exists?}
+    I -->|No| J[ERROR: Missing domains field]
+    I -->|Yes| K{Is domains an array?}
+    K -->|No| L[ERROR: domains must be array]
+    K -->|Yes| M[Iterate Domains]
+    M --> N{domain.domain exists?}
+    N -->|No| O[WARN: Skip - missing domain field]
+    N -->|Yes| P{domain.region exists?}
+    P -->|No| Q[WARN: Skip - missing region field]
+    P -->|Yes| R{Region filter match?}
+    R -->|No| S[Skip - region filter]
+    R -->|Yes| T[Extract URLs]
+    T --> U{existing_urls has URLs?}
+    U -->|Yes| V[Use existing URLs]
+    U -->|No| W{articles array exists?}
+    W -->|No| X[WARN: No URLs available - continue]
+    W -->|Yes| Y{articles has items?}
+    Y -->|No| Z[WARN: Empty articles array]
+    Y -->|Yes| AA[Extract URLs from articles]
+    AA --> BB{Extracted URLs found?}
+    BB -->|No| CC[WARN: No valid URLs in articles]
+    BB -->|Yes| DD[Success - URLs available]
+    V --> DD
+    DD --> EE[Create DomainTarget]
+    X --> EE
+    Z --> EE
+    CC --> EE
+    EE --> FF{Any DomainTargets created?}
+    FF -->|No| GG[ERROR: No valid domain targets]
+    FF -->|Yes| HH[Continue to Validation]
+    HH --> II{URLs to validate?}
+    II -->|No| JJ[WARN: No URLs to validate for domain]
+    II -->|Yes| KK[Start MCP Validation]
+    KK --> LL{MCP Server Start Success?}
+    LL -->|No| MM[ERROR: Failed to start MCP server]
+    LL -->|Yes| NN[Execute scrape_article_content]
+    NN --> OO{Tool Execution Success?}
+    OO -->|No| PP[ERROR: Tool execution failed]
+    OO -->|Yes| QQ[Success - Generate Report]
+    style C fill: #ff4444, color: #fff
+    style F fill: #ff4444, color: #fff
+    style H fill: #ff4444, color: #fff
+    style J fill: #ff4444, color: #fff
+    style L fill: #ff4444, color: #fff
+    style GG fill: #ff4444, color: #fff
+    style MM fill: #ff4444, color: #fff
+    style PP fill: #ff4444, color: #fff
+    style O fill: #ffaa44, color: #000
+    style Q fill: #ffaa44, color: #000
+    style X fill: #ffaa44, color: #000
+    style Z fill: #ffaa44, color: #000
+    style CC fill: #ffaa44, color: #000
+    style JJ fill: #ffaa44, color: #000
+    style DD fill: #44ff44, color: #000
+    style QQ fill: #44ff44, color: #000
+    classDef errorBox fill: #ff4444, stroke: #cc0000, stroke-width: 3px, color: #fff
+    classDef warnBox fill: #ffaa44, stroke: #cc6600, stroke-width: 2px, color: #000
+    classDef successBox fill: #44ff44, stroke: #00cc00, stroke-width: 2px, color: #000
