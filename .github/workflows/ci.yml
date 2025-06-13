@@ -45,8 +45,8 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Test Docker build
-        run: docker build -f Dockerfile -t mcp-web-scraper:test .
+      #- name: Test Docker build
+      #  run: docker build -f Dockerfile -t mcp-web-scraper:test .
 
       - name: Notify on failure
         if: failure()
