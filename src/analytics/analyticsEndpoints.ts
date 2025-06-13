@@ -3,7 +3,7 @@
  * Provides REST API endpoints for extraction analytics and performance monitoring
  */
 
-import express from 'express';
+import express, {Request, Response, NextFunction, RequestHandler} from 'express';
 import {AnalyticsManager} from '@/analytics/analyticsManager.js';
 import {RuleEffectivenessTracker} from '@/content/analytics/ruleEffectivenessTracker.js';
 import {ExtractionCache} from '@/content/caching/extractionCache.js';
@@ -41,23 +41,25 @@ export class AnalyticsEndpoints {
 
         // Middleware
         if (this.config.enableCors) {
-            router.use((req, res, next) => {
+            const corsMiddleware = (req: Request, res: Response, next: NextFunction) => {
                 res.header('Access-Control-Allow-Origin', '*');
                 res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
                 res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
                 next();
-            });
+            };
+            router.use(corsMiddleware as RequestHandler);
         }
 
         // Authentication middleware
         if (this.config.requireAuthentication) {
-            router.use((req, res, next) => {
+            const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
                 const token = req.headers.authorization?.replace('Bearer ', '');
                 if (!token || token !== this.config.authToken) {
                     return res.status(401).json({error: 'Unauthorized'});
                 }
                 next();
-            });
+            };
+            router.use(authMiddleware as RequestHandler);
         }
 
         // JSON parsing
@@ -65,7 +67,7 @@ export class AnalyticsEndpoints {
 
         // Rate limiting (basic implementation)
         const requestCounts = new Map<string, { count: number; resetTime: number }>();
-        router.use((req, res, next) => {
+        const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
             const clientId = req.ip || 'unknown';
             const now = Date.now();
             const windowStart = Math.floor(now / 60000) * 60000; // 1-minute window
@@ -85,7 +87,8 @@ export class AnalyticsEndpoints {
 
             clientData.count++;
             next();
-        });
+        };
+        router.use(rateLimitMiddleware as RequestHandler);
 
         // Health check endpoint
         router.get('/health', (req, res) => {
@@ -302,7 +305,7 @@ export class AnalyticsEndpoints {
         });
 
         // POST /analytics/extraction - Record new extraction for analytics
-        router.post('/extraction', (req, res) => {
+        router.post('/extraction', ((req: Request, res: Response) => {
             try {
                 const {url, analytics} = req.body;
 
@@ -324,7 +327,7 @@ export class AnalyticsEndpoints {
                     message: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
-        });
+        }) as RequestHandler);
     }
 
     /**
