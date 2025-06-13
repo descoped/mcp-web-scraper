@@ -3,256 +3,230 @@
  */
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {PageManager} from '@/core/pageManager.js';
-import type {BrowserPool} from '@/core/browserPool.js';
+import {PageManager, type PageManagerConfig} from '@/core/pageManager.js';
+import {ConsentHandler} from '@/core/consentHandler.js';
+import type {IStructuredLogger} from '@/types/monitoring.js';
 
-// Mock browser and page
+// Mock page with accessibility support
 const mockPage = {
-    goto: vi.fn(),
-    close: vi.fn(),
-    title: vi.fn(() => 'Test Page'),
+    goto: vi.fn(() => Promise.resolve()),
+    close: vi.fn(() => Promise.resolve()),
+    title: vi.fn(() => Promise.resolve('Test Page')),
     url: vi.fn(() => 'https://example.com'),
-    content: vi.fn(() => '<html><body>Test</body></html>'),
-    screenshot: vi.fn(() => Buffer.from('screenshot')),
-    evaluate: vi.fn(),
-    waitForSelector: vi.fn(),
-    click: vi.fn(),
-    type: vi.fn(),
-    hover: vi.fn(),
-    selectOption: vi.fn(),
-    keyboard: {
-        press: vi.fn()
+    accessibility: {
+        snapshot: vi.fn(() => Promise.resolve({role: 'document', name: 'Test Page'}))
     },
-    mouse: {
-        click: vi.fn()
-    },
-    setViewportSize: vi.fn(),
-    pdf: vi.fn(() => Buffer.from('pdf')),
-    on: vi.fn(),
-    removeListener: vi.fn(),
     isClosed: vi.fn(() => false)
 };
 
 const mockContext = {
-    newPage: vi.fn(() => mockPage),
-    close: vi.fn(),
-    pages: vi.fn(() => [mockPage])
+    newPage: vi.fn(() => Promise.resolve(mockPage)),
+    close: vi.fn(() => Promise.resolve())
 };
 
-const mockBrowser = {
-    newContext: vi.fn(() => mockContext),
-    close: vi.fn(),
-    isConnected: vi.fn(() => true),
-    contexts: vi.fn(() => [mockContext])
+// Mock dependencies
+const mockLogger: IStructuredLogger = {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn()
 };
 
-const mockBrowserPool: Partial<BrowserPool> = {
-    getBrowser: vi.fn(() => Promise.resolve(mockBrowser as any)),
-    releaseBrowser: vi.fn(() => Promise.resolve())
+const mockConsentHandler = {
+    handleCookieConsent: vi.fn(() => Promise.resolve({success: true, method: 'auto'}))
+} as unknown as ConsentHandler;
+
+const mockConfig: PageManagerConfig = {
+    sessionTimeout: 300000, // 5 minutes
+    maxSessions: 10,
+    autoHandleConsent: true
 };
 
 describe('PageManager', () => {
     let pageManager: PageManager;
 
     beforeEach(() => {
-        pageManager = new PageManager(mockBrowserPool as BrowserPool);
+        pageManager = new PageManager(mockConfig, mockLogger, mockConsentHandler);
         vi.clearAllMocks();
     });
 
     afterEach(async () => {
-        await pageManager.closeAllSessions();
+        await pageManager.cleanup();
     });
 
     describe('session creation', () => {
         it('should create new session with unique ID', async () => {
-            const session = await pageManager.createSession();
+            const sessionId = await pageManager.createSession(mockContext as any);
 
-            expect(session).toBeDefined();
-            expect(session.sessionId).toBeDefined();
-            expect(session.page).toBeDefined();
-            expect(typeof session.sessionId).toBe('string');
+            expect(sessionId).toBeDefined();
+            expect(typeof sessionId).toBe('string');
+            expect(mockContext.newPage).toHaveBeenCalledTimes(1);
         });
 
         it('should create multiple unique sessions', async () => {
-            const session1 = await pageManager.createSession();
-            const session2 = await pageManager.createSession();
+            const sessionId1 = await pageManager.createSession(mockContext as any);
+            const sessionId2 = await pageManager.createSession(mockContext as any);
 
-            expect(session1.sessionId).not.toBe(session2.sessionId);
-            expect(session1.page).not.toBe(session2.page);
+            expect(sessionId1).not.toBe(sessionId2);
+            expect(mockContext.newPage).toHaveBeenCalledTimes(2);
         });
 
-        it('should use browser pool for session creation', async () => {
-            await pageManager.createSession();
+        it('should log session creation', async () => {
+            const sessionId = await pageManager.createSession(mockContext as any);
 
-            expect(mockBrowserPool.getBrowser).toHaveBeenCalledTimes(1);
-            expect(mockBrowser.newContext).toHaveBeenCalledTimes(1);
-            expect(mockContext.newPage).toHaveBeenCalledTimes(1);
+            expect(mockLogger.info).toHaveBeenCalledWith('Page session created', {operationId: sessionId});
         });
     });
 
     describe('session retrieval', () => {
         it('should retrieve existing session by ID', async () => {
-            const session = await pageManager.createSession();
-            const retrieved = pageManager.getSession(session.sessionId);
+            const sessionId = await pageManager.createSession(mockContext as any);
+            const retrieved = await pageManager.getSession(sessionId);
 
-            expect(retrieved).toBe(session);
+            expect(retrieved).toBeDefined();
+            expect(retrieved!.id).toBe(sessionId);
+            expect(retrieved!.page).toBe(mockPage);
         });
 
-        it('should return undefined for non-existent session', () => {
-            const retrieved = pageManager.getSession('non-existent-id');
+        it('should return null for non-existent session', async () => {
+            const retrieved = await pageManager.getSession('non-existent-id');
 
-            expect(retrieved).toBeUndefined();
+            expect(retrieved).toBeNull();
+        });
+
+        it('should update lastActivity when retrieving session', async () => {
+            const sessionId = await pageManager.createSession(mockContext as any);
+
+            const firstRetrieval = await pageManager.getSession(sessionId);
+            const firstTime = firstRetrieval!.lastActivity;
+
+            // Wait a bit and retrieve again
+            await new Promise(resolve => setTimeout(resolve, 10));
+            const secondRetrieval = await pageManager.getSession(sessionId);
+            const secondTime = secondRetrieval!.lastActivity;
+
+            expect(secondTime.getTime()).toBeGreaterThan(firstTime.getTime());
         });
     });
 
     describe('session management', () => {
-        it('should track all active sessions', async () => {
-            const session1 = await pageManager.createSession();
-            const session2 = await pageManager.createSession();
-
-            const allSessions = pageManager.getAllSessions();
-
-            expect(allSessions).toHaveLength(2);
-            expect(allSessions).toContain(session1);
-            expect(allSessions).toContain(session2);
-        });
-
         it('should close specific session', async () => {
-            const session = await pageManager.createSession();
+            const sessionId = await pageManager.createSession(mockContext as any);
 
-            await pageManager.closeSession(session.sessionId);
+            await pageManager.closeSession(sessionId);
 
             expect(mockPage.close).toHaveBeenCalledTimes(1);
             expect(mockContext.close).toHaveBeenCalledTimes(1);
-            expect(mockBrowserPool.releaseBrowser).toHaveBeenCalledTimes(1);
+            expect(mockLogger.info).toHaveBeenCalledWith('Page session closed', {operationId: sessionId});
 
-            const retrieved = pageManager.getSession(session.sessionId);
-            expect(retrieved).toBeUndefined();
+            const retrieved = await pageManager.getSession(sessionId);
+            expect(retrieved).toBeNull();
         });
 
-        it('should close all sessions', async () => {
-            await pageManager.createSession();
-            await pageManager.createSession();
-
-            expect(pageManager.getAllSessions()).toHaveLength(2);
-
-            await pageManager.closeAllSessions();
-
-            expect(pageManager.getAllSessions()).toHaveLength(0);
-            expect(mockPage.close).toHaveBeenCalledTimes(2);
-            expect(mockContext.close).toHaveBeenCalledTimes(2);
-            expect(mockBrowserPool.releaseBrowser).toHaveBeenCalledTimes(2);
+        it('should handle closing non-existent session gracefully', async () => {
+            await expect(pageManager.closeSession('non-existent')).resolves.not.toThrow();
         });
     });
 
-    describe('session health monitoring', () => {
-        it('should detect closed pages', async () => {
-            const session = await pageManager.createSession();
+    describe('navigation', () => {
+        it('should navigate in session', async () => {
+            const sessionId = await pageManager.createSession(mockContext as any);
+            const url = 'https://test.com';
 
-            // Mock page as closed
-            mockPage.isClosed.mockReturnValue(true);
+            await pageManager.navigateInSession(sessionId, url);
 
-            const isHealthy = pageManager.isSessionHealthy(session.sessionId);
-            expect(isHealthy).toBe(false);
+            expect(mockPage.goto).toHaveBeenCalledWith(url, {waitUntil: 'domcontentloaded'});
+
+            const session = await pageManager.getSession(sessionId);
+            expect(session!.url).toBe(url);
+            expect(session!.navigationHistory).toContain(url);
         });
 
-        it('should detect healthy sessions', async () => {
-            const session = await pageManager.createSession();
+        it('should handle consent during navigation', async () => {
+            const sessionId = await pageManager.createSession(mockContext as any);
 
-            // Mock page as open
-            mockPage.isClosed.mockReturnValue(false);
+            await pageManager.navigateInSession(sessionId, 'https://test.com', true);
 
-            const isHealthy = pageManager.isSessionHealthy(session.sessionId);
-            expect(isHealthy).toBe(true);
+            expect(mockConsentHandler.handleCookieConsent).toHaveBeenCalledWith(mockPage);
+
+            const session = await pageManager.getSession(sessionId);
+            expect(session!.hasConsentHandled).toBe(true);
         });
 
-        it('should return false for non-existent sessions', () => {
-            const isHealthy = pageManager.isSessionHealthy('non-existent');
-            expect(isHealthy).toBe(false);
+        it('should throw error for non-existent session', async () => {
+            await expect(pageManager.navigateInSession('non-existent', 'https://test.com'))
+                .rejects.toThrow('Session non-existent not found');
         });
     });
 
-    describe('session cleanup', () => {
+    describe('page snapshots', () => {
+        it('should get page snapshot', async () => {
+            const sessionId = await pageManager.createSession(mockContext as any);
+            await pageManager.navigateInSession(sessionId, 'https://test.com');
+
+            const snapshot = await pageManager.getPageSnapshot(sessionId);
+
+            expect(snapshot).toBeDefined();
+            expect(snapshot.sessionId).toBe(sessionId);
+            expect(snapshot.title).toBe('Test Page');
+            expect(snapshot.url).toBe('https://example.com');
+            expect(snapshot.accessibility).toBeDefined();
+            expect(mockPage.accessibility.snapshot).toHaveBeenCalled();
+        });
+
+        it('should throw error for non-existent session snapshot', async () => {
+            await expect(pageManager.getPageSnapshot('non-existent'))
+                .rejects.toThrow('Session non-existent not found');
+        });
+    });
+
+    describe('error handling', () => {
+        it('should handle page creation failures', async () => {
+            // Mock page creation failure
+            mockContext.newPage.mockRejectedValueOnce(new Error('Page failed'));
+
+            await expect(pageManager.createSession(mockContext as any)).rejects.toThrow('Page failed');
+        });
+
         it('should handle session close errors gracefully', async () => {
-            const session = await pageManager.createSession();
+            const sessionId = await pageManager.createSession(mockContext as any);
 
             // Mock close error
             mockPage.close.mockRejectedValueOnce(new Error('Close failed'));
 
             // Should not throw
-            await expect(pageManager.closeSession(session.sessionId)).resolves.not.toThrow();
+            await expect(pageManager.closeSession(sessionId)).resolves.not.toThrow();
         });
 
-        it('should clean up unhealthy sessions', async () => {
-            const session = await pageManager.createSession();
+        it('should handle consent handler errors gracefully', async () => {
+            const sessionId = await pageManager.createSession(mockContext as any);
 
-            // Mock page as closed
-            mockPage.isClosed.mockReturnValue(true);
+            // Mock consent handler failure
+            vi.mocked(mockConsentHandler.handleCookieConsent).mockRejectedValueOnce(new Error('Consent failed'));
 
-            await pageManager.cleanupUnhealthySessions();
+            // Should not throw
+            await expect(pageManager.navigateInSession(sessionId, 'https://test.com')).resolves.not.toThrow();
 
-            // Session should be removed from manager
-            const retrieved = pageManager.getSession(session.sessionId);
-            expect(retrieved).toBeUndefined();
-        });
-
-        it('should preserve healthy sessions during cleanup', async () => {
-            const session = await pageManager.createSession();
-
-            // Mock page as healthy
-            mockPage.isClosed.mockReturnValue(false);
-
-            await pageManager.cleanupUnhealthySessions();
-
-            // Session should still exist
-            const retrieved = pageManager.getSession(session.sessionId);
-            expect(retrieved).toBe(session);
+            expect(mockLogger.warn).toHaveBeenCalledWith('Cookie consent handling failed', {operationId: sessionId});
         });
     });
 
-    describe('error handling', () => {
-        it('should handle browser acquisition failures', async () => {
-            // Mock browser acquisition failure
-            vi.mocked(mockBrowserPool.getBrowser!).mockRejectedValueOnce(new Error('Browser unavailable'));
+    describe('cleanup', () => {
+        it('should cleanup all sessions on destroy', async () => {
+            const sessionId1 = await pageManager.createSession(mockContext as any);
+            const sessionId2 = await pageManager.createSession(mockContext as any);
 
-            await expect(pageManager.createSession()).rejects.toThrow('Browser unavailable');
-        });
+            await pageManager.cleanup();
 
-        it('should handle context creation failures', async () => {
-            // Mock context creation failure
-            mockBrowser.newContext.mockRejectedValueOnce(new Error('Context failed'));
+            // Verify sessions are closed
+            expect(mockPage.close).toHaveBeenCalledTimes(2);
+            expect(mockContext.close).toHaveBeenCalledTimes(2);
 
-            await expect(pageManager.createSession()).rejects.toThrow('Context failed');
-        });
-
-        it('should handle page creation failures', async () => {
-            // Mock page creation failure
-            mockContext.newPage.mockRejectedValueOnce(new Error('Page failed'));
-
-            await expect(pageManager.createSession()).rejects.toThrow('Page failed');
-        });
-    });
-
-    describe('resource management', () => {
-        it('should properly release browser resources', async () => {
-            const session = await pageManager.createSession();
-            await pageManager.closeSession(session.sessionId);
-
-            expect(mockBrowserPool.releaseBrowser).toHaveBeenCalledWith(mockBrowser);
-        });
-
-        it('should close context before releasing browser', async () => {
-            const session = await pageManager.createSession();
-            await pageManager.closeSession(session.sessionId);
-
-            expect(mockContext.close).toHaveBeenCalledBefore(mockBrowserPool.releaseBrowser as any);
-        });
-
-        it('should close page before closing context', async () => {
-            const session = await pageManager.createSession();
-            await pageManager.closeSession(session.sessionId);
-
-            expect(mockPage.close).toHaveBeenCalledBefore(mockContext.close as any);
+            // Verify sessions are removed
+            const retrieved1 = await pageManager.getSession(sessionId1);
+            const retrieved2 = await pageManager.getSession(sessionId2);
+            expect(retrieved1).toBeNull();
+            expect(retrieved2).toBeNull();
         });
     });
 });

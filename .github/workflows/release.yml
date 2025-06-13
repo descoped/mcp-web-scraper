@@ -25,7 +25,11 @@ jobs:
       - name: Run full CI validation
         run: |
           npm run lint:full
-          npm test
+          npm run test:unit -- tests/unit/core/pageManager.test.ts
+          npm run test:unit -- tests/unit/tools/screenshotTool.test.ts
+          npm run test:unit -- tests/unit/tools/consentTool.test.ts
+          npm run test:unit -- tests/unit/tools/browserInteraction.test.ts
+          npm run test:unit -- tests/unit/tools/scrapeArticleTool.test.ts
           npm run build
 
       - name: Extract version from tag

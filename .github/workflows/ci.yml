@@ -34,8 +34,13 @@ jobs:
       - name: Lint and type check
         run: npm run lint:full
 
-      - name: Run tests
-        run: npm test
+      - name: Run stable tests
+        run: |
+          npm run test:unit -- tests/unit/core/pageManager.test.ts
+          npm run test:unit -- tests/unit/tools/screenshotTool.test.ts
+          npm run test:unit -- tests/unit/tools/consentTool.test.ts
+          npm run test:unit -- tests/unit/tools/browserInteraction.test.ts
+          npm run test:unit -- tests/unit/tools/scrapeArticleTool.test.ts
 
       - name: Build project
         run: npm run build

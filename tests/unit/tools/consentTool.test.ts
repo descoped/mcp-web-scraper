@@ -124,7 +124,7 @@ describe('ConsentTool', () => {
             const schema = tool.inputSchema;
 
             expect(schema.properties?.timeout).toBeDefined();
-            expect(schema.properties?.timeout.type).toBe('number');
+            expect(schema.properties?.timeout.type).toBe('integer');
         });
 
         it('should mark url as required', () => {

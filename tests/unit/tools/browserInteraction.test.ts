@@ -63,7 +63,7 @@ describe('Browser Interaction Tools', () => {
 
         it('should have correct metadata', () => {
             expect(tool.name).toBe('browser_navigate');
-            expect(tool.description).toContain('navigate');
+            expect(tool.description).toContain('Navigate');
             expect(tool.inputSchema.type).toBe('object');
         });
 
@@ -117,7 +117,7 @@ describe('Browser Interaction Tools', () => {
 
         it('should have correct metadata', () => {
             expect(tool.name).toBe('browser_click');
-            expect(tool.description).toContain('click');
+            expect(tool.description).toBe('Click on web elements using CSS selectors or coordinates');
             expect(tool.inputSchema.type).toBe('object');
         });
 
@@ -132,10 +132,12 @@ describe('Browser Interaction Tools', () => {
             expect(schema.properties?.sessionId).toBeDefined();
         });
 
-        it('should have optional clickOptions', () => {
+        it('should have optional click parameters', () => {
             const schema = tool.inputSchema;
-            expect(schema.properties?.clickOptions).toBeDefined();
-            expect(schema.properties?.clickOptions.type).toBe('object');
+            expect(schema.properties?.button).toBeDefined();
+            expect(schema.properties?.clickCount).toBeDefined();
+            expect(schema.properties?.force).toBeDefined();
+            expect(schema.properties?.timeout).toBeDefined();
         });
 
         it('should validate input properly', async () => {
@@ -176,7 +178,7 @@ describe('Browser Interaction Tools', () => {
 
         it('should have correct metadata', () => {
             expect(tool.name).toBe('browser_type');
-            expect(tool.description).toContain('type');
+            expect(tool.description).toBe('Type text into input fields or editable elements');
             expect(tool.inputSchema.type).toBe('object');
         });
 
