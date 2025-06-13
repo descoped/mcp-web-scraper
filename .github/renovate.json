@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:recommended",
     ":dependencyDashboard",
     ":semanticCommits",
     ":automergeDigest",
@@ -24,16 +24,16 @@
         "minor",
         "patch"
       ],
-      "excludePackageNames": [
-        "@modelcontextprotocol/sdk",
-        "playwright",
-        "typescript",
-        "@typescript-eslint/eslint-plugin",
-        "@typescript-eslint/parser"
-      ],
       "automerge": true,
       "automergeType": "pr",
-      "platformAutomerge": true
+      "platformAutomerge": true,
+      "matchPackageNames": [
+        "!@modelcontextprotocol/sdk",
+        "!playwright",
+        "!typescript",
+        "!@typescript-eslint/eslint-plugin",
+        "!@typescript-eslint/parser"
+      ]
     },
     {
       "description": "Group all non-major dependency updates",
@@ -41,15 +41,15 @@
         "minor",
         "patch"
       ],
-      "excludePackageNames": [
-        "@modelcontextprotocol/sdk",
-        "playwright",
-        "typescript",
-        "@typescript-eslint/eslint-plugin",
-        "@typescript-eslint/parser"
-      ],
       "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch"
+      "groupSlug": "all-minor-patch",
+      "matchPackageNames": [
+        "!@modelcontextprotocol/sdk",
+        "!playwright",
+        "!typescript",
+        "!@typescript-eslint/eslint-plugin",
+        "!@typescript-eslint/parser"
+      ]
     },
     {
       "description": "Critical dependencies - manual review required",
@@ -90,14 +90,14 @@
         "minor",
         "patch"
       ],
-      "excludePackageNames": [
-        "playwright",
-        "typescript",
-        "@typescript-eslint/eslint-plugin",
-        "@typescript-eslint/parser"
-      ],
       "groupName": "devDependencies (non-major)",
-      "groupSlug": "dev-dependencies"
+      "groupSlug": "dev-dependencies",
+      "matchPackageNames": [
+        "!playwright",
+        "!typescript",
+        "!@typescript-eslint/eslint-plugin",
+        "!@typescript-eslint/parser"
+      ]
     }
   ],
   "vulnerabilityAlerts": {
