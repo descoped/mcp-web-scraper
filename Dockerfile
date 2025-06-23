@@ -2,7 +2,7 @@
 # MCP-Compliant Playwright Server (TypeScript Implementation)
 
 # Base stage with Playwright and Node.js
-FROM mcr.microsoft.com/playwright:v1.53.0-jammy AS app-base
+FROM mcr.microsoft.com/playwright:v1.53.1-jammy AS app-base
 
 # Install Node.js, npm, and essential tools using meta-packages
 RUN apt-get update && apt-get install -y \
